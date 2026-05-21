@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>妳那里是什么天气</title>
-<link rel="preconnect" href="https://fonts.font.im">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.font.im/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Pinyon+Script&family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=Long+Cang&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.font.im" crossorigin>
+<link href="https://fonts.font.im/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Pinyon+Script&family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     /* 做旧泛黄 · 月份牌 palette */
@@ -481,13 +480,15 @@
   .city-strip {
     display: grid;
     grid-template-columns: 56px 1fr auto;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto auto auto auto;
     grid-template-areas:
       "icon main clock"
       "icon sun   sun"
-      "fc   fc    fc";
+      "hdc  hdc   hdc"
+      "fc   fc    fc"
+      "hdf  hdf   hdf";
     column-gap: 14px;
-    row-gap: 6px;
+    row-gap: 0;
     padding: 12px 4px;
     align-items: center;
   }
@@ -586,7 +587,7 @@
     font-size: 12px;
     color: var(--ink-soft);
     letter-spacing: 0.08em;
-    padding-top: 6px;
+    padding-top: 12px;
     border-top: 1px dotted rgba(122, 93, 62, 0.4);
   }
   .cs-sun .lbl { color: var(--brown); margin-right: 4px; }
@@ -607,7 +608,7 @@
     grid-template-columns: auto repeat(3, 1fr);
     gap: 8px;
     align-items: center;
-    padding-top: 8px;
+    padding-top: 14px;
     border-top: 1px dotted rgba(122, 93, 62, 0.4);
   }
   .cs-fc-lbl {
@@ -646,6 +647,151 @@
     font-size: 12px;
     color: var(--ink-soft);
     margin-top: 1px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── 可点卡片 + 细图展开面板 ───────────── */
+  [data-card] {
+    cursor: pointer;
+    transition: box-shadow 200ms ease, background-color 200ms ease;
+  }
+  [data-card]:hover {
+    box-shadow: inset 0 0 0 1px var(--gold-soft);
+  }
+  [data-card].active {
+    box-shadow:
+      inset 0 0 0 1.5px var(--red),
+      0 1px 0 var(--red);
+    background-color: rgba(240, 221, 181, 0.55);
+  }
+  /* current card 是 cs-main + 它的左右伙伴；整片可点（光标连带） */
+  .city-strip:not(.loading):not(.error) .cs-icon,
+  .city-strip:not(.loading):not(.error) .cs-clock,
+  .city-strip:not(.loading):not(.error) .cs-sun { cursor: pointer; }
+
+  .hourly-detail {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0 6px;
+    position: relative;
+    background:
+      linear-gradient(180deg,
+        rgba(240, 221, 181, 0.55) 0%,
+        rgba(232, 212, 168, 0.30) 100%);
+    transition:
+      max-height 420ms cubic-bezier(.4, 0, .2, 1),
+      opacity   260ms ease,
+      padding   260ms ease,
+      margin    260ms ease;
+  }
+  .hourly-detail[data-slot="current"]  { grid-area: hdc; }
+  .hourly-detail[data-slot="forecast"] { grid-area: hdf; }
+
+  .hourly-detail.open {
+    max-height: 460px;
+    opacity: 1;
+    padding: 14px 8px 16px;
+    margin: 8px 0 4px;
+    border-top: 1px dashed var(--gold-deep);
+    border-bottom: 1px dotted rgba(122, 93, 62, 0.45);
+    box-shadow:
+      inset 0 1px 0 var(--paper-light),
+      inset 0 -1px 0 rgba(232, 212, 168, 0.5);
+  }
+  /* 指回所点卡片的小三角，位置由 JS 写 --pointer-x */
+  .hourly-detail.open::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: var(--pointer-x, 24px);
+    width: 11px; height: 11px;
+    background: var(--paper-light);
+    border-left: 1px solid var(--gold-deep);
+    border-top:  1px solid var(--gold-deep);
+    transform: translateX(-50%) rotate(45deg);
+    z-index: 1;
+  }
+
+  .detail-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    color: var(--brown);
+    text-align: center;
+    padding: 2px 0 8px;
+    border-bottom: 1px dotted rgba(122, 93, 62, 0.4);
+    text-transform: none;
+  }
+  .detail-subtitle .fig {
+    color: var(--red-deep);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    font-style: normal;
+    margin-right: 10px;
+  }
+  .detail-subtitle .dash {
+    color: var(--gold-deep);
+    margin: 0 8px;
+    font-style: normal;
+  }
+  .detail-subtitle .cn {
+    display: block;
+    font-family: 'Ma Shan Zheng', cursive;
+    font-style: normal;
+    font-size: 14px;
+    color: var(--ink-soft);
+    letter-spacing: 0.32em;
+    padding-left: 0.32em;
+    margin-top: 4px;
+  }
+
+  .detail-chart {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 12px 0 10px;
+  }
+
+  .detail-notes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px 22px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 8px 4px 0;
+    border-top: 1px dotted rgba(122, 93, 62, 0.35);
+  }
+  .detail-notes .row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .detail-notes .lbl {
+    color: var(--brown);
+    letter-spacing: 0.18em;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .detail-notes .val {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 13.5px;
+    color: var(--ink);
+    font-feature-settings: "lnum";
+    font-style: italic;
+  }
+  .detail-notes .val.hi { color: var(--red-deep); }
+  .detail-notes .val.lo { color: var(--blue-faded); }
+  .detail-notes .val .cn {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-style: normal;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-left: 4px;
     letter-spacing: 0.1em;
   }
 
@@ -782,9 +928,15 @@
         "icon main"
         "icon clock"
         "sun  sun"
-        "fc   fc";
+        "hdc  hdc"
+        "fc   fc"
+        "hdf  hdf";
       column-gap: 10px;
     }
+    .detail-notes { grid-template-columns: 1fr; gap: 4px 0; }
+    .detail-subtitle { font-size: 11px; letter-spacing: 0.18em; }
+    .detail-subtitle .cn { font-size: 12px; letter-spacing: 0.24em; padding-left: 0.24em; }
+    .hourly-detail.open { max-height: 520px; padding: 12px 4px 14px; }
     .cs-icon { width: 46px; height: 46px; }
     .cs-clock { text-align: left; }
     .cs-time { font-size: 22px; }
@@ -1075,7 +1227,7 @@
 
     <section class="city-strip loading" id="city-pa">
       <svg class="cs-icon" id="pa-icon" viewBox="0 0 80 80"></svg>
-      <div class="cs-main">
+      <div class="cs-main" data-card="current">
         <div class="cs-name">Palo Alto <span class="cn">帕罗奥图</span></div>
         <div class="cs-cond"><span id="pa-cond-cn">—</span><span class="en" id="pa-cond-en">—</span></div>
       </div>
@@ -1089,15 +1241,17 @@
         <span class="lbl">日出</span><span class="val rise" id="pa-sunrise">—</span>
         <span class="lbl">日落</span><span class="val set" id="pa-sunset">—</span>
       </div>
+      <div class="hourly-detail" data-slot="current"></div>
       <div class="cs-forecast" id="pa-forecast">
         <div class="cs-fc-lbl">未來三日</div>
       </div>
+      <div class="hourly-detail" data-slot="forecast"></div>
       <div class="err">無法取得天氣 · Unable to load weather</div>
     </section>
 
     <section class="city-strip loading" id="city-km">
       <svg class="cs-icon" id="km-icon" viewBox="0 0 80 80"></svg>
-      <div class="cs-main">
+      <div class="cs-main" data-card="current">
         <div class="cs-name">Kunming <span class="cn">昆 · 明</span></div>
         <div class="cs-cond"><span id="km-cond-cn">—</span><span class="en" id="km-cond-en">—</span></div>
       </div>
@@ -1111,9 +1265,11 @@
         <span class="lbl">日出</span><span class="val rise" id="km-sunrise">—</span>
         <span class="lbl">日落</span><span class="val set" id="km-sunset">—</span>
       </div>
+      <div class="hourly-detail" data-slot="current"></div>
       <div class="cs-forecast" id="km-forecast">
         <div class="cs-fc-lbl">未來三日</div>
       </div>
+      <div class="hourly-detail" data-slot="forecast"></div>
       <div class="err">無法取得天氣 · Unable to load weather</div>
     </section>
   </div>
@@ -1456,8 +1612,10 @@
     return d.toLocaleDateString('en-US', { weekday: 'short' });
   }
 
-  // ───── 数据缓存 (合成配乐用) ─────
+  // ───── 数据缓存 (合成配乐 + 小时细图用) ─────
   const cityMoods = {};
+  const cityHourly = {};   // { pa: { time:[], temperature_2m:[], ... }, km: {...} }
+  const cityDaily  = {};   // { pa: { time:[], sunrise:[], sunset:[] }, km: {...} }
 
   function updateSoundtrack() {
     const moods = Object.values(cityMoods);
@@ -1693,8 +1851,9 @@
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
         `&current=temperature_2m,weather_code,is_day` +
+        `&hourly=temperature_2m,precipitation_probability,precipitation,relative_humidity_2m,wind_speed_10m,wind_direction_10m` +
         `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset` +
-        `&temperature_unit=celsius` +
+        `&temperature_unit=celsius&wind_speed_unit=ms` +
         `&timezone=auto&forecast_days=4`;
 
       const res = await fetch(url);
@@ -1732,6 +1891,8 @@
 
         const mini = document.createElement('div');
         mini.className = 'fc-mini';
+        mini.dataset.card = 'day';
+        mini.dataset.dayIndex = String(i);
         mini.innerHTML = `
           <div class="fc-day">${day}</div>
           <div class="fc-temps"><span class="hi">${hi}°</span><span class="lo">/${lo}°</span></div>
@@ -1739,6 +1900,10 @@
         `;
         fcEl.appendChild(mini);
       }
+
+      // 缓存 hourly / daily 给细图用
+      cityHourly[cityId] = data.hourly;
+      cityDaily[cityId]  = data.daily;
 
       // 动态场景：根据 is_day + mood 重画插画半边
       updateScene(cityId === 'pa' ? 'L' : 'R', cur.is_day === 1, curInfo.mood);
@@ -1752,6 +1917,363 @@
       cityEl.classList.add('error');
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //   ★  細圖之一 · 時辰起伏  ·  Hourly Disposition  ★
+  // ═══════════════════════════════════════════════════════════════════════
+  let activeDetail = null; // { cityId, dayIdx } | null
+
+  const ROMAN        = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ'];
+  const CN_DAY_LABEL = ['今日', '明日', '後日', '大後日'];
+  const DIR_CN       = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
+
+  // 把 hourly 数据按 daily.time[dayIdx] 切出 24 小时
+  function sliceDay(hourly, dayIdx, dailyTime) {
+    const dayDate = dailyTime?.[dayIdx];
+    if (!dayDate) return null;
+    const start = hourly.time.findIndex(t => t.slice(0, 10) === dayDate);
+    if (start < 0) return null;
+    const slice = arr => (arr || []).slice(start, start + 24);
+    // 简单插值缺失温度（用上一个非空值）
+    const tRaw = slice(hourly.temperature_2m);
+    let prev = tRaw.find(v => v != null) ?? 0;
+    const temp = tRaw.map(v => (v == null ? prev : (prev = v)));
+    return {
+      time:    slice(hourly.time),
+      temp,
+      precipP: slice(hourly.precipitation_probability).map(v => v ?? 0),
+      precip:  slice(hourly.precipitation).map(v => v ?? 0),
+      humid:   slice(hourly.relative_humidity_2m),
+      wind:    slice(hourly.wind_speed_10m),
+      windDir: slice(hourly.wind_direction_10m),
+    };
+  }
+
+  // "2026-05-20T05:42" → 5.7
+  function timeToHour(iso) {
+    if (!iso) return null;
+    const m = iso.match(/T(\d{2}):(\d{2})/);
+    return m ? parseInt(m[1], 10) + parseInt(m[2], 10) / 60 : null;
+  }
+
+  // Catmull-Rom → cubic Bézier 平滑（更像手绘曲线）
+  function smoothPath(pts) {
+    if (pts.length < 2) return '';
+    let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i === 0 ? i : i - 1];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+      const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+      const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+    }
+    return d;
+  }
+
+  // 主体：返回 SVG 字符串
+  function buildHourlyChart(slice, sunriseHr, sunsetHr, gradId) {
+    const W = 720, H = 200;
+    const padL = 32, padR = 20, padT = 24, padB = 44;
+    const chartX1 = padL, chartX2 = W - padR;
+    const chartY1 = padT, chartY2 = H - padB;
+    const innerW = chartX2 - chartX1;
+    const innerH = chartY2 - chartY1;
+
+    const temps = slice.temp;
+    const probs = slice.precipP;
+
+    const tMin = Math.min(...temps);
+    const tMax = Math.max(...temps);
+    const range = Math.max(tMax - tMin, 4);
+    const tBaseMin = tMin - range * 0.15;
+    const tBaseMax = tMax + range * 0.15;
+
+    const xH = h => chartX1 + (h / 24) * innerW;
+    const yT = t => chartY2 - ((t - tBaseMin) / (tBaseMax - tBaseMin)) * innerH;
+
+    let s = `<svg class="detail-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+
+    // 背景纸 + 内边框
+    s += `<rect x="${chartX1}" y="${chartY1}" width="${innerW}" height="${innerH + 26}"
+                fill="#F0DDB5" fill-opacity="0.42"
+                stroke="#A88040" stroke-width="0.6" stroke-opacity="0.55"/>`;
+
+    // 网格（淡 gold dotted）
+    for (const h of [6, 12, 18]) {
+      const x = xH(h);
+      s += `<line x1="${x}" y1="${chartY1}" x2="${x}" y2="${chartY2}"
+                  stroke="#A88040" stroke-width="0.4" stroke-dasharray="2 3" opacity="0.4"/>`;
+    }
+    const yMid = yT((tBaseMin + tBaseMax) / 2);
+    s += `<line x1="${chartX1}" y1="${yMid}" x2="${chartX2}" y2="${yMid}"
+                stroke="#A88040" stroke-width="0.4" stroke-dasharray="2 3" opacity="0.35"/>`;
+
+    // 降水概率底栏
+    const barY0 = chartY2 + 2;
+    const barAreaH = 22;
+    const barW = (innerW / 24) * 0.58;
+    for (let i = 0; i < 24; i++) {
+      if (probs[i] > 5) {
+        const h = (probs[i] / 100) * barAreaH;
+        const x = xH(i + 0.5) - barW / 2;
+        s += `<rect x="${x.toFixed(1)}" y="${(barY0 + barAreaH - h).toFixed(1)}"
+                    width="${barW.toFixed(1)}" height="${h.toFixed(1)}"
+                    fill="#4A6478" fill-opacity="0.55" rx="0.6"/>`;
+      }
+    }
+
+    // 温度水彩底 + 曲线（带 oil wobble）
+    const pts = temps.map((t, i) => [xH(i + 0.5), yT(t)]);
+    const linePath = smoothPath(pts);
+    const last = pts[pts.length - 1], first = pts[0];
+    const fillPath = linePath +
+      ` L${last[0].toFixed(1)} ${chartY2.toFixed(1)} L${first[0].toFixed(1)} ${chartY2.toFixed(1)} Z`;
+    s += `<defs>
+      <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#8B3A2E" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="#8B3A2E" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>`;
+    s += `<path d="${fillPath}" fill="url(#${gradId})" filter="url(#oil)"/>`;
+    s += `<path d="${linePath}" fill="none" stroke="#6E2A20" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round" filter="url(#oil)"/>`;
+
+    // 极值标记
+    const argMax = temps.reduce((mi, v, i, a) => (v > a[mi] ? i : mi), 0);
+    const argMin = temps.reduce((mi, v, i, a) => (v < a[mi] ? i : mi), 0);
+    const [xMx, yMx] = pts[argMax];
+    const [xMn, yMn] = pts[argMin];
+    s += `<circle cx="${xMx.toFixed(1)}" cy="${yMx.toFixed(1)}" r="2.6"
+                  fill="#8B3A2E" stroke="#3A2A1A" stroke-width="0.6"/>`;
+    s += `<text x="${xMx.toFixed(1)}" y="${(yMx - 6).toFixed(1)}"
+                font-family="Cormorant Garamond, serif" font-style="italic"
+                font-size="10" fill="#6E2A20" text-anchor="middle">${Math.round(temps[argMax])}°</text>`;
+    s += `<circle cx="${xMn.toFixed(1)}" cy="${yMn.toFixed(1)}" r="2.6"
+                  fill="#4A6478" stroke="#3A2A1A" stroke-width="0.6"/>`;
+    s += `<text x="${xMn.toFixed(1)}" y="${(yMn + 13).toFixed(1)}"
+                font-family="Cormorant Garamond, serif" font-style="italic"
+                font-size="10" fill="#4A6478" text-anchor="middle">${Math.round(temps[argMin])}°</text>`;
+
+    // 左侧温度上限/下限刻度
+    s += `<text x="${chartX1 - 4}" y="${(chartY1 + 4).toFixed(1)}"
+                font-family="Cormorant Garamond, serif" font-style="italic"
+                font-size="9" fill="#7A5D3E" text-anchor="end">${Math.round(tBaseMax)}°</text>`;
+    s += `<text x="${chartX1 - 4}" y="${chartY2.toFixed(1)}"
+                font-family="Cormorant Garamond, serif" font-style="italic"
+                font-size="9" fill="#7A5D3E" text-anchor="end">${Math.round(tBaseMin)}°</text>`;
+
+    // X 轴时刻 (0/6/12/18/24)
+    const tickY1 = barY0 + barAreaH + 2;
+    const tickY2 = tickY1 + 4;
+    const labelY = tickY2 + 10;
+    for (const h of [0, 6, 12, 18, 24]) {
+      const x = xH(h);
+      s += `<line x1="${x.toFixed(1)}" y1="${tickY1}" x2="${x.toFixed(1)}" y2="${tickY2}"
+                  stroke="#7A5D3E" stroke-width="0.6"/>`;
+      s += `<text x="${x.toFixed(1)}" y="${labelY}"
+                  font-family="Cormorant Garamond, serif" font-style="italic"
+                  font-size="10" fill="#5A4730" text-anchor="middle"
+                  letter-spacing="0.5">${String(h).padStart(2, '0')}h</text>`;
+    }
+
+    // 日出 / 日落 glyph（在曲线顶上方）
+    if (sunriseHr != null && sunriseHr >= 0 && sunriseHr <= 24) {
+      const x = xH(sunriseHr);
+      s += `<g opacity="0.9">
+        <circle cx="${x.toFixed(1)}" cy="${chartY1 - 8}" r="3.4"
+                fill="#A88040" stroke="#806030" stroke-width="0.5"/>
+        <text x="${x.toFixed(1)}" y="${chartY1 - 14}"
+              font-family="Cormorant Garamond, serif" font-style="italic"
+              font-size="8" fill="#806030" text-anchor="middle">SUNRISE</text>
+      </g>`;
+    }
+    if (sunsetHr != null && sunsetHr >= 0 && sunsetHr <= 24) {
+      const x = xH(sunsetHr);
+      s += `<g opacity="0.9">
+        <circle cx="${x.toFixed(1)}" cy="${chartY1 - 8}" r="3"
+                fill="#4A6478" stroke="#3A2A1A" stroke-width="0.5"/>
+        <text x="${x.toFixed(1)}" y="${chartY1 - 14}"
+              font-family="Cormorant Garamond, serif" font-style="italic"
+              font-size="8" fill="#4A6478" text-anchor="middle">SUNSET</text>
+      </g>`;
+    }
+
+    s += `</svg>`;
+    return s;
+  }
+
+  function buildHourlyNotes(slice) {
+    const temps = slice.temp;
+    const probs = slice.precipP;
+    const precip = slice.precip;
+    const humid  = slice.humid.filter(v => v != null);
+    const winds  = slice.wind;
+    const winDir = slice.windDir;
+    const windsOk = winds.filter(v => v != null);
+
+    // 最高溫
+    const argMax = temps.reduce((mi, v, i, a) => (v > a[mi] ? i : mi), 0);
+    const peakHtml = `<span class="val hi">${Math.round(temps[argMax])}°<span class="cn">於 ${String(argMax).padStart(2, '0')}:00</span></span>`;
+
+    // 降水：最长连续 prob>=30 区段
+    let bestStart = -1, bestLen = 0, curStart = -1, curLen = 0;
+    for (let i = 0; i < 24; i++) {
+      if (probs[i] >= 30) {
+        if (curStart < 0) { curStart = i; curLen = 1; }
+        else curLen++;
+        if (curLen > bestLen) { bestLen = curLen; bestStart = curStart; }
+      } else {
+        curStart = -1; curLen = 0;
+      }
+    }
+    let precipHtml;
+    if (bestLen > 0) {
+      const sumMm = precip.slice(bestStart, bestStart + bestLen).reduce((a, b) => a + (b || 0), 0);
+      const sH = String(bestStart).padStart(2, '0');
+      const eH = String((bestStart + bestLen) % 24).padStart(2, '0');
+      precipHtml = `<span class="val lo">${sH}:00 – ${eH}:00<span class="cn">約 ${sumMm.toFixed(1)} mm</span></span>`;
+    } else {
+      precipHtml = `<span class="val"><span class="cn">全日無雨</span></span>`;
+    }
+
+    // 湿度
+    let humidHtml;
+    if (humid.length > 0) {
+      humidHtml = `<span class="val">${Math.round(Math.min(...humid))} – ${Math.round(Math.max(...humid))}<span class="cn">%</span></span>`;
+    } else {
+      humidHtml = `<span class="val">—</span>`;
+    }
+
+    // 风：min–max + 主导方向（风速加权 vector mean）
+    let windHtml;
+    if (windsOk.length > 0) {
+      const wMin = Math.min(...windsOk), wMax = Math.max(...windsOk);
+      let sx = 0, sy = 0, wsum = 0;
+      for (let i = 0; i < 24; i++) {
+        if (winDir[i] != null && winds[i] != null) {
+          const w = Math.max(winds[i], 0.1);
+          const r = winDir[i] * Math.PI / 180;
+          sx += Math.sin(r) * w; sy += Math.cos(r) * w; wsum += w;
+        }
+      }
+      let dirCn = '';
+      if (wsum > 0) {
+        let meanDeg = Math.atan2(sx, sy) * 180 / Math.PI;
+        if (meanDeg < 0) meanDeg += 360;
+        dirCn = DIR_CN[Math.round(meanDeg / 45) % 8];
+      }
+      windHtml = `<span class="val">${wMin.toFixed(1)} – ${wMax.toFixed(1)} m/s${dirCn ? `<span class="cn">${dirCn}風</span>` : ''}</span>`;
+    } else {
+      windHtml = `<span class="val">—</span>`;
+    }
+
+    return `
+      <div class="detail-notes">
+        <div class="row"><span class="lbl">最高溫</span>${peakHtml}</div>
+        <div class="row"><span class="lbl">降水</span>${precipHtml}</div>
+        <div class="row"><span class="lbl">濕度</span>${humidHtml}</div>
+        <div class="row"><span class="lbl">風力</span>${windHtml}</div>
+      </div>`;
+  }
+
+  function buildDetailHTML(cityId, dayIdx) {
+    const hourly = cityHourly[cityId];
+    const daily  = cityDaily[cityId];
+    if (!hourly || !daily) return null;
+    const slice = sliceDay(hourly, dayIdx, daily.time);
+    if (!slice) return null;
+    const sunriseHr = timeToHour(daily.sunrise?.[dayIdx]);
+    const sunsetHr  = timeToHour(daily.sunset?.[dayIdx]);
+    const dayCn = CN_DAY_LABEL[dayIdx] || '';
+    const dayEn = fmtDay(daily.time[dayIdx]);
+    const gradId = `tempFill-${cityId}-${dayIdx}`;
+
+    const subtitle = `
+      <div class="detail-subtitle">
+        <span class="fig">FIG. ${ROMAN[dayIdx] || (dayIdx + 1)}</span>Hourly Disposition<span class="dash">—</span><em>${dayCn} · ${dayEn}</em>
+      </div>`;
+    return subtitle + buildHourlyChart(slice, sunriseHr, sunsetHr, gradId) + buildHourlyNotes(slice);
+  }
+
+  function findTargetCard(strip, dayIdx) {
+    if (dayIdx === 0) return strip.querySelector('.cs-main[data-card="current"]');
+    return strip.querySelector(`.fc-mini[data-card="day"][data-day-index="${dayIdx}"]`);
+  }
+
+  function setPointerX(panel, targetCard) {
+    if (!targetCard) return;
+    const cardRect = targetCard.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    if (panelRect.width === 0) return;
+    const x = cardRect.left + cardRect.width / 2 - panelRect.left;
+    const clamped = Math.max(14, Math.min(panelRect.width - 14, x));
+    panel.style.setProperty('--pointer-x', `${clamped}px`);
+  }
+
+  function closeAllDetails() {
+    document.querySelectorAll('.hourly-detail.open').forEach(panel => {
+      panel.classList.remove('open');
+      const onEnd = (e) => {
+        if (e.target !== panel || e.propertyName !== 'max-height') return;
+        panel.removeEventListener('transitionend', onEnd);
+        if (!panel.classList.contains('open')) panel.innerHTML = '';
+      };
+      panel.addEventListener('transitionend', onEnd);
+    });
+    document.querySelectorAll('[data-card].active').forEach(el => el.classList.remove('active'));
+    activeDetail = null;
+  }
+
+  function toggleDetail(cityId, dayIdx) {
+    if (!cityHourly[cityId] || !cityDaily[cityId]) return;
+    if (activeDetail && activeDetail.cityId === cityId && activeDetail.dayIdx === dayIdx) {
+      closeAllDetails(); return;
+    }
+    closeAllDetails();
+    const html = buildDetailHTML(cityId, dayIdx);
+    if (!html) return;
+    const strip = document.getElementById(`city-${cityId}`);
+    const slot = dayIdx === 0 ? 'current' : 'forecast';
+    const panel = strip.querySelector(`.hourly-detail[data-slot="${slot}"]`);
+    const targetCard = findTargetCard(strip, dayIdx);
+    panel.innerHTML = html;
+    void panel.offsetWidth; // 强制 reflow，让 transition 起步
+    panel.classList.add('open');
+    if (targetCard) targetCard.classList.add('active');
+    requestAnimationFrame(() => setPointerX(panel, targetCard));
+    activeDetail = { cityId, dayIdx };
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.hourly-detail')) return; // 面板内点击不动它
+    const strip = e.target.closest('.city-strip');
+    const fcMini = e.target.closest('.fc-mini[data-card="day"]');
+    if (fcMini && strip) {
+      toggleDetail(strip.id.slice(5), parseInt(fcMini.dataset.dayIndex, 10));
+      return;
+    }
+    if (strip) {
+      // forecast 区里非 fc-mini 的间隙 → 不动
+      if (e.target.closest('.cs-forecast')) return;
+      toggleDetail(strip.id.slice(5), 0);
+      return;
+    }
+    if (activeDetail) closeAllDetails();
+  });
+
+  window.addEventListener('resize', () => {
+    if (!activeDetail) return;
+    const strip = document.getElementById(`city-${activeDetail.cityId}`);
+    if (!strip) return;
+    const slot = activeDetail.dayIdx === 0 ? 'current' : 'forecast';
+    const panel = strip.querySelector(`.hourly-detail[data-slot="${slot}"]`);
+    const targetCard = findTargetCard(strip, activeDetail.dayIdx);
+    setPointerX(panel, targetCard);
+  });
 
   // ───── 启动 ─────
   buildToday();
