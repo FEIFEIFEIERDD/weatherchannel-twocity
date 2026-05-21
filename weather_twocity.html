@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>妳那里是什么天气 · 兩埠晴雨掛曆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Pinyon+Script&family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* 做旧泛黄 · 月份牌 palette */
+    --paper:        #E8D4A8;
+    --paper-deep:   #D9C088;
+    --paper-light:  #F0DDB5;
+    --paper-shadow: #B89E70;
+    --ink:          #3A2A1A;
+    --ink-soft:     #5A4730;
+    --brown:        #7A5D3E;
+    --red:          #8B3A2E;
+    --red-deep:     #6E2A20;
+    --red-bright:   #A8412E;
+    --gold:         #A88040;
+    --gold-soft:    #C2A464;
+    --gold-deep:    #806030;
+    --blue-faded:   #4A6478;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Serif SC', 'EB Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* 茶渍/狐斑 + 噪点 — 做旧两层 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background-image:
+      radial-gradient(ellipse 220px 180px at 12% 14%,  rgba(122, 93, 62, 0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 160px 120px at 88% 22%,  rgba(110, 42, 32, 0.10) 0%, transparent 65%),
+      radial-gradient(ellipse 260px 200px at 22% 88%,  rgba(122, 93, 62, 0.18) 0%, transparent 65%),
+      radial-gradient(ellipse 200px 160px at 78% 92%,  rgba(122, 93, 62, 0.16) 0%, transparent 65%),
+      radial-gradient(ellipse 90px  70px  at 45% 50%,  rgba(122, 93, 62, 0.10) 0%, transparent 70%),
+      radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(58, 42, 26, 0.22) 100%);
+    mix-blend-mode: multiply;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.6;
+    background-image: url("data:image/svg+xml;utf8,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.14 0 0 0 0 0.09 0 0 0 0 0.05 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+  }
+
+  /* SVG 滤镜：手绘 wobble */
+  .oil-filter { position: absolute; width: 0; height: 0; }
+
+  .wrap {
+    position: relative;
+    z-index: 3;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 28px 22px 48px;
+  }
+
+  /* 月份牌主框 — Art Deco 双层金边 */
+  .poster {
+    position: relative;
+    padding: 56px 44px 38px;
+    background:
+      linear-gradient(155deg, var(--paper-light) 0%, var(--paper) 40%, var(--paper-deep) 100%);
+    border: 1.5px solid var(--gold-deep);
+    box-shadow:
+      inset 0 0 0 4px var(--paper),
+      inset 0 0 0 5px var(--gold),
+      inset 0 0 0 9px var(--paper),
+      inset 0 0 0 10px var(--gold-soft),
+      0 6px 28px rgba(58, 24, 12, 0.32);
+  }
+
+  /* 四角梅花装饰 */
+  .corner {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    z-index: 4;
+  }
+  .corner.tl { top: 18px; left: 18px; }
+  .corner.tr { top: 18px; right: 18px; transform: scaleX(-1); }
+  .corner.bl { bottom: 18px; left: 18px; transform: scaleY(-1); }
+  .corner.br { bottom: 18px; right: 18px; transform: scale(-1, -1); }
+
+  /* ── 头部品牌区 ────────────────────── */
+  .poster-head {
+    text-align: center;
+    margin-bottom: 22px;
+    animation: unfurl 1.2s ease-out 0.05s both;
+  }
+
+  .year-line {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.5em;
+    color: var(--brown);
+    padding-left: 0.5em;
+    margin-bottom: 10px;
+  }
+  .year-line .west {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    margin-left: 6px;
+    color: var(--ink-soft);
+  }
+  .year-line .sep {
+    color: var(--gold-deep);
+    margin: 0 10px;
+  }
+
+  .brand-cn {
+    display: inline-block;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 34px;
+    color: var(--paper-light);
+    background: var(--red);
+    padding: 8px 28px 10px;
+    letter-spacing: 0.32em;
+    padding-left: calc(28px + 0.32em);
+    position: relative;
+    box-shadow:
+      inset 0 0 0 2px var(--paper-light),
+      inset 0 0 0 3px var(--red),
+      0 2px 0 var(--red-deep),
+      0 3px 6px rgba(58, 24, 12, 0.3);
+    text-shadow: 0 1px 0 rgba(110, 42, 32, 0.6);
+  }
+  .brand-cn::before,
+  .brand-cn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 38px;
+    height: 1px;
+    background: var(--gold-deep);
+  }
+  .brand-cn::before { left: -52px; box-shadow: 0 3px 0 var(--gold-deep); }
+  .brand-cn::after  { right: -52px; box-shadow: 0 3px 0 var(--gold-deep); }
+
+  .brand-en {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 22px;
+    color: var(--gold-deep);
+    margin-top: 14px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── 插画卷（SVG 双景） ────────────── */
+  .illustration {
+    position: relative;
+    margin-top: 20px;
+    border: 1px solid var(--gold-deep);
+    box-shadow:
+      inset 0 0 0 3px var(--paper-light),
+      inset 0 0 0 4px var(--gold-soft),
+      0 3px 12px rgba(58, 24, 12, 0.18);
+    overflow: hidden;
+    animation: unfurl 1.3s ease-out 0.15s both;
+    background: var(--paper-light);
+  }
+
+  .scene {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .scene-overlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    pointer-events: none;
+  }
+
+  .scene-half {
+    padding: 22px 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .scene-half.right { align-items: flex-end; text-align: right; }
+
+  .scene-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--ink);
+    letter-spacing: 0.08em;
+    line-height: 1.15;
+    text-shadow:
+      0 0 4px rgba(232, 212, 168, 0.85),
+      0 1px 0 rgba(232, 212, 168, 0.85);
+  }
+  .scene-label .cn {
+    display: block;
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 22px;
+    color: var(--red-deep);
+    letter-spacing: 0.18em;
+    margin-top: 2px;
+  }
+
+  .scene-temp {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 82px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+    padding: 6px 18px 10px;
+    background:
+      radial-gradient(ellipse at center, rgba(244, 228, 192, 0.95) 0%, rgba(224, 204, 164, 0.90) 100%);
+    border: 1px solid var(--gold-deep);
+    box-shadow:
+      inset 0 0 0 2px rgba(168, 128, 64, 0.4),
+      0 3px 10px rgba(58, 24, 12, 0.4);
+    text-shadow:
+      1px 1px 0 rgba(168, 128, 64, 0.3),
+      2px 2px 4px rgba(58, 24, 12, 0.2);
+    font-feature-settings: "lnum";
+    transform: rotate(-1.2deg);
+  }
+  .scene-half.left  .scene-temp { color: var(--red-deep); }
+  .scene-half.right .scene-temp {
+    color: var(--blue-faded);
+    align-self: flex-end;
+    transform: rotate(1.2deg);
+  }
+  .scene-temp .u {
+    font-size: 26px;
+    vertical-align: top;
+    margin-left: 3px;
+    font-style: italic;
+    color: var(--gold-deep);
+  }
+
+  /* 夜间配色：城市名直接贴天空，需要暗色描边以保可读 */
+  .scene-half.night .scene-label {
+    color: #F0DDB5;
+    text-shadow: 0 0 6px rgba(15, 10, 28, 0.95), 0 1px 0 rgba(0, 0, 0, 0.7);
+  }
+  .scene-half.night .scene-label .cn { color: #E8B898; }
+
+  /* ── 月份红条 ───────────────────────── */
+  .month-banner {
+    margin-top: 22px;
+    background:
+      linear-gradient(180deg, var(--red-bright) 0%, var(--red) 50%, var(--red-deep) 100%);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    box-shadow:
+      inset 0 0 0 2px var(--gold-soft),
+      inset 0 0 0 3px var(--red-deep),
+      inset 0 0 0 4px var(--gold),
+      0 3px 8px rgba(58, 24, 12, 0.3);
+    position: relative;
+    animation: unfurl 1.2s ease-out 0.25s both;
+  }
+  .month-banner::before,
+  .month-banner::after {
+    content: '❀';
+    color: var(--gold-soft);
+    font-size: 14px;
+  }
+
+  .month-cn {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--paper-light);
+    letter-spacing: 0.4em;
+    padding-left: 0.4em;
+    text-shadow: 0 1px 0 var(--red-deep);
+  }
+  .month-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--gold-soft);
+    letter-spacing: 0.32em;
+    padding-left: 0.32em;
+  }
+  .solar-term {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 19px;
+    color: var(--paper-light);
+    letter-spacing: 0.18em;
+  }
+  .solar-term .label {
+    font-size: 12px;
+    color: var(--gold-soft);
+    letter-spacing: 0.32em;
+    margin-right: 8px;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 500;
+  }
+  .solar-term b {
+    font-weight: normal;
+    font-size: 22px;
+    text-shadow: 0 1px 0 var(--red-deep);
+  }
+
+  /* ── 今日撕历卡片 ─────────────────── */
+  .today-wrap {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: unfurl 1.2s ease-out 0.32s both;
+  }
+
+  .today-card {
+    width: 240px;
+    padding: 14px 18px 16px;
+    background:
+      linear-gradient(165deg, var(--paper-light) 0%, var(--paper) 100%);
+    border: 1px solid var(--gold-deep);
+    box-shadow:
+      inset 0 0 0 3px var(--paper-light),
+      inset 0 0 0 4px var(--gold-soft),
+      0 4px 12px rgba(58, 24, 12, 0.22);
+    text-align: center;
+    position: relative;
+  }
+
+  /* 撕历钉孔 */
+  .today-card::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 14px;
+    background: var(--paper);
+    border: 1px solid var(--gold-deep);
+    border-radius: 50%;
+    box-shadow: inset 0 1px 2px rgba(58, 24, 12, 0.4);
+  }
+
+  .today-weekday {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--red);
+    letter-spacing: 0.4em;
+    padding-left: 0.4em;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--gold-deep);
+    margin-top: 6px;
+  }
+  .today-weekday .en {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--brown);
+    letter-spacing: 0.15em;
+    margin-top: 2px;
+  }
+
+  .today-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 96px;
+    line-height: 1;
+    color: var(--red-deep);
+    letter-spacing: -0.04em;
+    margin: 10px 0 8px;
+    text-shadow:
+      2px 2px 0 rgba(168, 128, 64, 0.35),
+      3px 3px 6px rgba(58, 24, 12, 0.22);
+    font-feature-settings: "lnum";
+    animation: pulse-num 3s ease-in-out infinite;
+  }
+  @keyframes pulse-num {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.025); }
+  }
+
+  .today-monthyear {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: 0.18em;
+    padding-top: 8px;
+    border-top: 1px solid var(--gold-deep);
+    font-feature-settings: "lnum";
+  }
+  .today-monthyear .cn {
+    display: block;
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 18px;
+    color: var(--ink-soft);
+    letter-spacing: 0.2em;
+    margin-top: 2px;
+    font-style: normal;
+  }
+
+  .today-tz {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--brown);
+    margin-top: 10px;
+    text-transform: uppercase;
+  }
+  .today-tz::before, .today-tz::after {
+    content: '·';
+    margin: 0 8px;
+    color: var(--gold-deep);
+  }
+
+  /* ── 两埠晴雨 ───────────────────── */
+  .cities {
+    margin-top: 22px;
+    border: 1px solid var(--gold-deep);
+    background: rgba(255, 248, 230, 0.18);
+    padding: 16px 18px;
+    position: relative;
+    box-shadow: inset 0 0 0 3px rgba(232, 212, 168, 0.35);
+    animation: unfurl 1.2s ease-out 0.4s both;
+  }
+  .cities-head {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--paper);
+    padding: 0 14px;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.4em;
+    color: var(--red-deep);
+    padding-left: calc(14px + 0.4em);
+  }
+  .cities-head .en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--gold-deep);
+    letter-spacing: 0.18em;
+    margin-left: 4px;
+  }
+
+  .city-strip {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "icon main clock"
+      "icon sun   sun"
+      "fc   fc    fc";
+    column-gap: 14px;
+    row-gap: 6px;
+    padding: 12px 4px;
+    align-items: center;
+  }
+
+  .city-strip + .city-strip {
+    border-top: 1px dashed var(--gold-deep);
+    margin-top: 4px;
+    padding-top: 14px;
+    position: relative;
+  }
+  .city-strip + .city-strip::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26px;
+    height: 1px;
+    background: var(--red);
+    box-shadow: 0 2px 0 var(--red);
+  }
+
+  .cs-icon {
+    grid-area: icon;
+    width: 56px;
+    height: 56px;
+    filter: drop-shadow(1px 1px 0 rgba(168, 128, 64, 0.35))
+            drop-shadow(0 2px 3px rgba(58, 24, 12, 0.15));
+  }
+
+  .cs-main { grid-area: main; line-height: 1.15; }
+  .cs-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--ink);
+  }
+  .cs-name .cn {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-style: normal;
+    font-size: 18px;
+    color: var(--red-deep);
+    margin-left: 6px;
+    letter-spacing: 0.15em;
+  }
+  .cs-cond {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+    letter-spacing: 0.04em;
+  }
+  .cs-cond .en {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    color: var(--brown);
+    margin-left: 4px;
+  }
+
+  .cs-clock {
+    grid-area: clock;
+    text-align: right;
+    line-height: 1;
+  }
+  .cs-time {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 26px;
+    color: var(--ink);
+    font-feature-settings: "lnum";
+    letter-spacing: 0.02em;
+  }
+  .cs-time .colon {
+    color: var(--red);
+    animation: tick 1s steps(2, end) infinite;
+    margin: 0 1px;
+  }
+  @keyframes tick {
+    0%, 50%   { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+  }
+  .cs-tz {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--brown);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .cs-sun {
+    grid-area: sun;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.08em;
+    padding-top: 6px;
+    border-top: 1px dotted rgba(122, 93, 62, 0.4);
+  }
+  .cs-sun .lbl { color: var(--brown); margin-right: 4px; }
+  .cs-sun .val {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--ink);
+    margin-right: 14px;
+    font-feature-settings: "lnum";
+  }
+  .cs-sun .val.set { color: var(--blue-faded); }
+  .cs-sun .val.rise { color: var(--red); }
+
+  .cs-forecast {
+    grid-area: fc;
+    display: grid;
+    grid-template-columns: auto repeat(3, 1fr);
+    gap: 8px;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px dotted rgba(122, 93, 62, 0.4);
+  }
+  .cs-fc-lbl {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    color: var(--brown);
+    letter-spacing: 0.18em;
+    padding-right: 8px;
+    border-right: 1px solid var(--gold-deep);
+  }
+  .fc-mini {
+    text-align: center;
+    padding: 4px 2px;
+    background: rgba(255, 248, 230, 0.4);
+    border: 1px dashed rgba(122, 93, 62, 0.4);
+    font-family: 'Cormorant Garamond', serif;
+    line-height: 1.15;
+    font-feature-settings: "lnum";
+  }
+  .fc-day {
+    font-style: italic;
+    font-size: 11px;
+    color: var(--brown);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .fc-temps {
+    font-size: 14px;
+    color: var(--ink);
+    margin-top: 2px;
+  }
+  .fc-temps .hi { font-weight: 600; color: var(--red-deep); font-size: 16px; }
+  .fc-temps .lo { color: var(--blue-faded); font-style: italic; margin-left: 2px; }
+  .fc-cn {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 1px;
+    letter-spacing: 0.1em;
+  }
+
+  .err {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 10px;
+    font-family: 'Ma Shan Zheng', cursive;
+    color: var(--red-deep);
+    display: none;
+  }
+  .city-strip.error .err { display: block; }
+  .city-strip.error .cs-icon,
+  .city-strip.error .cs-main,
+  .city-strip.error .cs-clock,
+  .city-strip.error .cs-sun,
+  .city-strip.error .cs-forecast { opacity: 0.25; }
+
+  /* ── 配乐 · 印章式 ─────────────── */
+  .soundtrack {
+    margin-top: 22px;
+    padding: 18px 24px 16px;
+    background: rgba(255, 248, 230, 0.2);
+    border: 1.5px solid var(--red);
+    box-shadow:
+      inset 0 0 0 3px var(--paper-light),
+      inset 0 0 0 4px var(--red),
+      0 2px 6px rgba(58, 24, 12, 0.18);
+    position: relative;
+    text-align: center;
+    animation: unfurl 1.2s ease-out 0.5s both;
+  }
+  .seal-corner {
+    position: absolute;
+    top: -16px;
+    left: 18px;
+    width: 38px;
+    height: 38px;
+    background: var(--red);
+    color: var(--paper-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 22px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--paper-light),
+      inset 0 0 0 2.5px var(--red),
+      0 2px 4px rgba(58, 24, 12, 0.3);
+    transform: rotate(-4deg);
+  }
+  .sound-poem {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 26px;
+    color: var(--ink);
+    line-height: 1.6;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+  .sound-poem::before { content: '「'; color: var(--gold-deep); margin-right: 2px; }
+  .sound-poem::after  { content: '」'; color: var(--gold-deep); margin-left: 2px; }
+
+  /* ── Footer 印记 ──────────────── */
+  .colophon {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--gold-deep);
+    text-align: center;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 11px;
+    color: var(--brown);
+    letter-spacing: 0.32em;
+    padding-left: 0.32em;
+  }
+  .colophon-en {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 18px;
+    color: var(--gold-deep);
+    letter-spacing: 0;
+    padding-left: 0;
+    margin-bottom: 4px;
+  }
+
+  /* loading state */
+  .loading .scene-temp,
+  .loading .cs-cond,
+  .loading .cs-sun .val,
+  .loading .cs-forecast { opacity: 0.3; }
+
+  @keyframes unfurl {
+    from { opacity: 0; transform: translateY(14px); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+  }
+
+  /* ── 响应式 ─────────────────── */
+  @media (max-width: 720px) {
+    .wrap { padding: 16px 10px 28px; }
+    .poster { padding: 40px 18px 24px; }
+    .corner { width: 46px; height: 46px; top: 10px; }
+    .corner.tl, .corner.bl { left: 10px; }
+    .corner.tr, .corner.br { right: 10px; }
+    .corner.bl, .corner.br { bottom: 10px; top: auto; }
+
+    .brand-cn { font-size: 22px; padding: 6px 18px 8px; letter-spacing: 0.24em; padding-left: calc(18px + 0.24em);}
+    .brand-cn::before, .brand-cn::after { width: 20px; }
+    .brand-cn::before { left: -28px; }
+    .brand-cn::after  { right: -28px; }
+    .brand-en { font-size: 16px; }
+    .year-line { font-size: 11px; letter-spacing: 0.3em; padding-left: 0.3em; }
+
+    .scene-temp { font-size: 48px; padding: 4px 12px 7px; }
+    .scene-temp .u { font-size: 16px; }
+    .scene-label { font-size: 13px; }
+    .scene-label .cn { font-size: 16px; }
+    .scene-half { padding: 12px 14px; }
+
+    .month-banner { padding: 8px 14px; gap: 8px; }
+    .month-cn { font-size: 17px; letter-spacing: 0.2em; padding-left: 0.2em; }
+    .month-en { display: none; }
+    .solar-term { font-size: 15px; }
+    .solar-term b { font-size: 17px; }
+    .solar-term .label { font-size: 10px; letter-spacing: 0.2em; margin-right: 4px; }
+
+    .today-card { width: 200px; padding: 12px 14px 14px; }
+    .today-num { font-size: 72px; }
+    .today-weekday { font-size: 14px; letter-spacing: 0.3em; padding-left: 0.3em; }
+    .today-monthyear { font-size: 14px; }
+    .today-tz { font-size: 10px; }
+
+    .city-strip {
+      grid-template-columns: 46px 1fr;
+      grid-template-areas:
+        "icon main"
+        "icon clock"
+        "sun  sun"
+        "fc   fc";
+      column-gap: 10px;
+    }
+    .cs-icon { width: 46px; height: 46px; }
+    .cs-clock { text-align: left; }
+    .cs-time { font-size: 22px; }
+    .cs-name { font-size: 18px; }
+    .cs-forecast { grid-template-columns: 1fr 1fr 1fr; }
+    .cs-fc-lbl { display: none; }
+
+    .sound-poem { font-size: 19px; line-height: 1.55; }
+    .seal-corner { width: 32px; height: 32px; font-size: 18px; top: -14px; left: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG wobble 滤镜 -->
+<svg class="oil-filter">
+  <defs>
+    <filter id="oil">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="5"/>
+      <feDisplacementMap in="SourceGraphic" scale="2"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="wrap">
+<div class="poster">
+
+  <!-- 四角梅花装饰 -->
+  <svg class="corner tl" viewBox="0 0 70 70" fill="none">
+    <!-- L 形几何框 -->
+    <path d="M4 4 L4 26 M4 4 L26 4" stroke="#A88040" stroke-width="1.4"/>
+    <path d="M10 10 L10 22 M10 10 L22 10" stroke="#A88040" stroke-width="0.8" opacity="0.7"/>
+    <path d="M4 30 L4 38 M30 4 L38 4" stroke="#A88040" stroke-width="0.6" opacity="0.5"/>
+    <!-- 梅花 5 瓣 -->
+    <g transform="translate(36 36)">
+      <ellipse cx="0" cy="-8" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85"/>
+      <ellipse cx="7.6" cy="-2.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(72 7.6 -2.5)"/>
+      <ellipse cx="4.7" cy="6.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(144 4.7 6.5)"/>
+      <ellipse cx="-4.7" cy="6.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(216 -4.7 6.5)"/>
+      <ellipse cx="-7.6" cy="-2.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(288 -7.6 -2.5)"/>
+      <circle cx="0" cy="0" r="2" fill="#8B3A2E"/>
+      <g stroke="#806030" stroke-width="0.5" opacity="0.7">
+        <line x1="0" y1="0" x2="0" y2="-3"/>
+        <line x1="0" y1="0" x2="2.8" y2="-0.9"/>
+        <line x1="0" y1="0" x2="1.7" y2="2.5"/>
+        <line x1="0" y1="0" x2="-1.7" y2="2.5"/>
+        <line x1="0" y1="0" x2="-2.8" y2="-0.9"/>
+      </g>
+    </g>
+    <!-- 枝条 -->
+    <path d="M30 30 Q 20 24 14 14" stroke="#806030" stroke-width="0.8" fill="none" opacity="0.7"/>
+  </svg>
+  <svg class="corner tr" viewBox="0 0 70 70" fill="none">
+    <path d="M4 4 L4 26 M4 4 L26 4" stroke="#A88040" stroke-width="1.4"/>
+    <path d="M10 10 L10 22 M10 10 L22 10" stroke="#A88040" stroke-width="0.8" opacity="0.7"/>
+    <path d="M4 30 L4 38 M30 4 L38 4" stroke="#A88040" stroke-width="0.6" opacity="0.5"/>
+    <g transform="translate(36 36)">
+      <ellipse cx="0" cy="-8" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85"/>
+      <ellipse cx="7.6" cy="-2.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(72 7.6 -2.5)"/>
+      <ellipse cx="4.7" cy="6.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(144 4.7 6.5)"/>
+      <ellipse cx="-4.7" cy="6.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(216 -4.7 6.5)"/>
+      <ellipse cx="-7.6" cy="-2.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(288 -7.6 -2.5)"/>
+      <circle cx="0" cy="0" r="2" fill="#8B3A2E"/>
+    </g>
+    <path d="M30 30 Q 20 24 14 14" stroke="#806030" stroke-width="0.8" fill="none" opacity="0.7"/>
+  </svg>
+  <svg class="corner bl" viewBox="0 0 70 70" fill="none">
+    <path d="M4 4 L4 26 M4 4 L26 4" stroke="#A88040" stroke-width="1.4"/>
+    <path d="M10 10 L10 22 M10 10 L22 10" stroke="#A88040" stroke-width="0.8" opacity="0.7"/>
+    <path d="M4 30 L4 38 M30 4 L38 4" stroke="#A88040" stroke-width="0.6" opacity="0.5"/>
+    <g transform="translate(36 36)">
+      <ellipse cx="0" cy="-8" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85"/>
+      <ellipse cx="7.6" cy="-2.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(72 7.6 -2.5)"/>
+      <ellipse cx="4.7" cy="6.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(144 4.7 6.5)"/>
+      <ellipse cx="-4.7" cy="6.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(216 -4.7 6.5)"/>
+      <ellipse cx="-7.6" cy="-2.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(288 -7.6 -2.5)"/>
+      <circle cx="0" cy="0" r="2" fill="#8B3A2E"/>
+    </g>
+    <path d="M30 30 Q 20 24 14 14" stroke="#806030" stroke-width="0.8" fill="none" opacity="0.7"/>
+  </svg>
+  <svg class="corner br" viewBox="0 0 70 70" fill="none">
+    <path d="M4 4 L4 26 M4 4 L26 4" stroke="#A88040" stroke-width="1.4"/>
+    <path d="M10 10 L10 22 M10 10 L22 10" stroke="#A88040" stroke-width="0.8" opacity="0.7"/>
+    <path d="M4 30 L4 38 M30 4 L38 4" stroke="#A88040" stroke-width="0.6" opacity="0.5"/>
+    <g transform="translate(36 36)">
+      <ellipse cx="0" cy="-8" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85"/>
+      <ellipse cx="7.6" cy="-2.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(72 7.6 -2.5)"/>
+      <ellipse cx="4.7" cy="6.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(144 4.7 6.5)"/>
+      <ellipse cx="-4.7" cy="6.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(216 -4.7 6.5)"/>
+      <ellipse cx="-7.6" cy="-2.5" rx="5" ry="6" fill="#C2A464" stroke="#806030" stroke-width="0.6" opacity="0.85" transform="rotate(288 -7.6 -2.5)"/>
+      <circle cx="0" cy="0" r="2" fill="#8B3A2E"/>
+    </g>
+    <path d="M30 30 Q 20 24 14 14" stroke="#806030" stroke-width="0.8" fill="none" opacity="0.7"/>
+  </svg>
+
+  <!-- 头部品牌 -->
+  <header class="poster-head">
+    <div class="year-line" id="year-line">
+      公元 二〇二六 年
+      <span class="sep">·</span>
+      <span class="west">A.D. 2026</span>
+    </div>
+    <div class="brand-cn">妳那里是什么天气</div>
+    <div class="brand-en">— What's the weather like in your city? —</div>
+  </header>
+
+  <!-- 插画卷：SVG 双景 + 温度浮层 -->
+  <div class="illustration">
+    <svg class="scene" viewBox="0 0 800 280" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <!-- 日间天空（暖泛黄） -->
+        <linearGradient id="skyL-day" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="#F0DDB5"/>
+          <stop offset="60%" stop-color="#E8D4A8"/>
+          <stop offset="100%" stop-color="#D4B888"/>
+        </linearGradient>
+        <linearGradient id="skyR-day" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="#E8DBB5"/>
+          <stop offset="60%" stop-color="#D8C898"/>
+          <stop offset="100%" stop-color="#B8A878"/>
+        </linearGradient>
+        <!-- 夜间天空（褪青/暮紫 — 在做旧调里偏冷） -->
+        <linearGradient id="skyL-night" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="#1E2138"/>
+          <stop offset="55%" stop-color="#363248"/>
+          <stop offset="100%" stop-color="#5A4868"/>
+        </linearGradient>
+        <linearGradient id="skyR-night" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="#1A1A30"/>
+          <stop offset="55%" stop-color="#322E48"/>
+          <stop offset="100%" stop-color="#4D3E5A"/>
+        </linearGradient>
+        <!-- 地貌渐变（不变） -->
+        <linearGradient id="redwoodG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5A4730"/>
+          <stop offset="100%" stop-color="#3A2A1A"/>
+        </linearGradient>
+        <linearGradient id="mtnG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7A5D3E"/>
+          <stop offset="100%" stop-color="#4A3820"/>
+        </linearGradient>
+        <!-- 半边剪辑，防止雨/雪跨过中线 -->
+        <clipPath id="clipL"><rect x="0"   y="0" width="400" height="280"/></clipPath>
+        <clipPath id="clipR"><rect x="400" y="0" width="400" height="280"/></clipPath>
+      </defs>
+
+      <!-- 天空底（fill 由 JS 切换） -->
+      <rect id="sky-L" x="0"   y="0" width="400" height="280" fill="url(#skyL-day)"/>
+      <rect id="sky-R" x="400" y="0" width="400" height="280" fill="url(#skyR-day)"/>
+
+      <!-- 风暴/阴沉的半透明压暗层 -->
+      <rect id="storm-L" x="0"   y="0" width="400" height="280" fill="#1F1409" opacity="0"/>
+      <rect id="storm-R" x="400" y="0" width="400" height="280" fill="#1F1409" opacity="0"/>
+
+      <!-- 日月（JS 注入 sun 或 moon） -->
+      <g id="celestial-L" clip-path="url(#clipL)"></g>
+      <g id="celestial-R" clip-path="url(#clipR)"></g>
+
+      <!-- 背景天气：星 / 云 / 雾（在山树之后） -->
+      <g id="weather-bg-L" clip-path="url(#clipL)"></g>
+      <g id="weather-bg-R" clip-path="url(#clipR)"></g>
+
+      <!-- 中线 Art Deco 云纹（静态装饰） -->
+      <g filter="url(#oil)" opacity="0.85">
+        <path d="M380 50 q 10 -10 20 0 q 10 -10 20 0 q 8 8 -2 14 q -8 6 -18 0 q -10 6 -18 0 q -10 -6 -2 -14z"
+              fill="#F0DDB5" stroke="#806030" stroke-width="1.2"/>
+        <path d="M385 130 q 8 -8 16 0 q 8 -8 16 0 q 6 6 -2 11 q -6 4 -14 0 q -8 4 -14 0 q -8 -5 -2 -11z"
+              fill="#F0DDB5" stroke="#806030" stroke-width="1"/>
+        <path d="M388 200 q 6 -6 12 0 q 6 -6 12 0 q 5 5 -1 9 q -5 4 -11 0 q -6 4 -11 0 q -6 -4 -1 -9z"
+              fill="#F0DDB5" stroke="#806030" stroke-width="0.9"/>
+        <line x1="400" y1="40" x2="400" y2="240" stroke="#806030" stroke-width="0.6" stroke-dasharray="3 4" opacity="0.45"/>
+      </g>
+
+      <!-- 左半：红杉林剪影（静态地貌） -->
+      <g filter="url(#oil)">
+        <!-- 远景红杉 -->
+        <path d="M50 240 L60 180 L65 175 L62 178 L70 240 z"  fill="url(#redwoodG)" opacity="0.6"/>
+        <path d="M85 240 L93 175 L97 170 L95 173 L102 240 z" fill="url(#redwoodG)" opacity="0.6"/>
+        <!-- 中景红杉 -->
+        <path d="M125 240 L138 150 L143 145 L140 148 L150 240 z" fill="url(#redwoodG)" opacity="0.82"/>
+        <path d="M170 240 L182 130 L188 125 L185 128 L194 240 z" fill="url(#redwoodG)"/>
+        <!-- 主红杉 1 -->
+        <path d="M220 245 L238 110 L246 100 L242 105 L255 245 z" fill="url(#redwoodG)"/>
+        <ellipse cx="238" cy="160" rx="14" ry="32" fill="#3A2A1A" opacity="0.55"/>
+        <ellipse cx="238" cy="120" rx="10" ry="22" fill="#3A2A1A" opacity="0.7"/>
+        <!-- 主红杉 2 -->
+        <path d="M290 245 L305 90 L313 80 L309 86 L322 245 z" fill="url(#redwoodG)"/>
+        <ellipse cx="306" cy="140" rx="15" ry="36" fill="#3A2A1A" opacity="0.55"/>
+        <ellipse cx="306" cy="100" rx="11" ry="24" fill="#3A2A1A" opacity="0.7"/>
+        <!-- 后景小树 -->
+        <path d="M350 245 L360 175 L365 170 L362 173 L370 245 z" fill="url(#redwoodG)" opacity="0.65"/>
+        <!-- 地平线 -->
+        <line x1="0" y1="245" x2="400" y2="245" stroke="#3A2A1A" stroke-width="1.4"/>
+        <line x1="0" y1="248" x2="400" y2="248" stroke="#806030" stroke-width="0.6" opacity="0.5"/>
+        <!-- 草地点缀 -->
+        <g stroke="#5A4730" stroke-width="0.6" opacity="0.55">
+          <line x1="40" y1="250" x2="42" y2="245"/>
+          <line x1="80" y1="252" x2="82" y2="247"/>
+          <line x1="160" y1="251" x2="162" y2="247"/>
+          <line x1="270" y1="252" x2="272" y2="248"/>
+          <line x1="340" y1="251" x2="342" y2="247"/>
+        </g>
+      </g>
+
+      <!-- 右半：滇池/西山 -->
+      <g filter="url(#oil)">
+        <!-- 远山 -->
+        <path d="M420 200 Q 480 130 540 175 Q 600 130 660 165 Q 720 120 800 170 L800 245 L420 245 z"
+              fill="url(#mtnG)" opacity="0.55"/>
+        <!-- 中山 -->
+        <path d="M420 220 Q 500 155 580 200 Q 670 150 800 195 L800 245 L420 245 z"
+              fill="url(#mtnG)" opacity="0.85"/>
+        <!-- 近山 -->
+        <path d="M420 240 Q 510 195 600 222 Q 700 195 800 218 L800 250 L420 250 z"
+              fill="#3A2A1A" opacity="0.95"/>
+        <!-- 山顶白雪/亮线 -->
+        <path d="M460 188 Q 478 152 510 175" stroke="#F0DDB5" stroke-width="0.8" fill="none" opacity="0.6"/>
+        <path d="M620 175 Q 650 138 690 165" stroke="#F0DDB5" stroke-width="0.8" fill="none" opacity="0.55"/>
+
+        <!-- 滇池 -->
+        <rect x="420" y="245" width="380" height="8" fill="#4A6478" opacity="0.6"/>
+        <!-- 水波 -->
+        <g stroke="#3A2A1A" stroke-width="0.6" fill="none" opacity="0.5">
+          <path d="M440 250 q 8 -2 16 0 q 8 -2 16 0"/>
+          <path d="M520 251 q 8 -2 16 0 q 8 -2 16 0"/>
+          <path d="M620 250 q 8 -2 16 0 q 8 -2 16 0"/>
+          <path d="M720 251 q 8 -2 16 0 q 8 -2 16 0"/>
+        </g>
+        <!-- 远帆 -->
+        <g stroke="#3A2A1A" stroke-width="0.8" fill="#F0DDB5" opacity="0.75">
+          <path d="M540 244 L546 230 L550 244 z"/>
+          <path d="M640 246 L644 236 L648 246 z"/>
+        </g>
+      </g>
+
+      <!-- 前景天气：雨丝/雪花/闪电（在地貌之前，营造前景感） -->
+      <g id="weather-fg-L" clip-path="url(#clipL)"></g>
+      <g id="weather-fg-R" clip-path="url(#clipR)"></g>
+
+      <!-- 边框内描金边 -->
+      <rect x="2" y="2" width="796" height="276" fill="none" stroke="#A88040" stroke-width="0.6" opacity="0.5"/>
+    </svg>
+
+    <div class="scene-overlay">
+      <div class="scene-half left">
+        <div class="scene-label">
+          Palo Alto
+          <span class="cn">帕罗奥图</span>
+        </div>
+        <div class="scene-temp" id="pa-temp">—<span class="u">°C</span></div>
+      </div>
+      <div class="scene-half right">
+        <div class="scene-label">
+          Kunming
+          <span class="cn">昆 · 明</span>
+        </div>
+        <div class="scene-temp" id="km-temp">—<span class="u">°C</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 月份红条 -->
+  <div class="month-banner">
+    <span class="month-cn" id="month-cn">— 月</span>
+    <span class="month-en" id="month-en">—</span>
+    <span class="solar-term"><span class="label">節氣</span><b id="solar-term">—</b></span>
+  </div>
+
+  <!-- 今日撕历 -->
+  <div class="today-wrap">
+    <div class="today-card">
+      <div class="today-weekday">
+        <span id="today-wd-cn">—</span>
+        <span class="en" id="today-wd-en">—</span>
+      </div>
+      <div class="today-num" id="today-num">—</div>
+      <div class="today-monthyear">
+        <span id="today-monthyear-en">— —</span>
+        <span class="cn" id="today-monthyear-cn">— · —</span>
+      </div>
+    </div>
+    <div class="today-tz" id="today-tz">—</div>
+  </div>
+
+  <!-- 两埠晴雨 -->
+  <div class="cities">
+    <div class="cities-head">兩 埠 晴 雨 <span class="en">— Two Ports —</span></div>
+
+    <section class="city-strip loading" id="city-pa">
+      <svg class="cs-icon" id="pa-icon" viewBox="0 0 80 80"></svg>
+      <div class="cs-main">
+        <div class="cs-name">Palo Alto <span class="cn">帕罗奥图</span></div>
+        <div class="cs-cond"><span id="pa-cond-cn">—</span><span class="en" id="pa-cond-en">—</span></div>
+      </div>
+      <div class="cs-clock">
+        <div class="cs-time">
+          <span id="pa-hh">—</span><span class="colon">:</span><span id="pa-mm">—</span>
+        </div>
+        <div class="cs-tz" id="pa-tz">— pst —</div>
+      </div>
+      <div class="cs-sun">
+        <span class="lbl">日出</span><span class="val rise" id="pa-sunrise">—</span>
+        <span class="lbl">日落</span><span class="val set" id="pa-sunset">—</span>
+      </div>
+      <div class="cs-forecast" id="pa-forecast">
+        <div class="cs-fc-lbl">未來三日</div>
+      </div>
+      <div class="err">無法取得天氣 · Unable to load weather</div>
+    </section>
+
+    <section class="city-strip loading" id="city-km">
+      <svg class="cs-icon" id="km-icon" viewBox="0 0 80 80"></svg>
+      <div class="cs-main">
+        <div class="cs-name">Kunming <span class="cn">昆 · 明</span></div>
+        <div class="cs-cond"><span id="km-cond-cn">—</span><span class="en" id="km-cond-en">—</span></div>
+      </div>
+      <div class="cs-clock">
+        <div class="cs-time">
+          <span id="km-hh">—</span><span class="colon">:</span><span id="km-mm">—</span>
+        </div>
+        <div class="cs-tz" id="km-tz">— cst —</div>
+      </div>
+      <div class="cs-sun">
+        <span class="lbl">日出</span><span class="val rise" id="km-sunrise">—</span>
+        <span class="lbl">日落</span><span class="val set" id="km-sunset">—</span>
+      </div>
+      <div class="cs-forecast" id="km-forecast">
+        <div class="cs-fc-lbl">未來三日</div>
+      </div>
+      <div class="err">無法取得天氣 · Unable to load weather</div>
+    </section>
+  </div>
+
+  <!-- 配乐 印章式 -->
+  <div class="soundtrack" id="soundtrack">
+    <div class="seal-corner">閱</div>
+    <p class="sound-poem" id="poem">—</p>
+  </div>
+
+  <!-- 印记 -->
+  <footer class="colophon">
+    <div class="colophon-en">~ Compiled on every viewing ~</div>
+    開放氣象資料 · 印製 · 每閱即新
+  </footer>
+
+</div>
+</div>
+
+<script>
+  // ───── 天气编码对照表 ─────
+  const codeMap = {
+    0:  { en: 'Clear sky',        cn: '晴朗',     icon: 'sun',      mood: 'clear' },
+    1:  { en: 'Mainly clear',     cn: '基本晴朗', icon: 'sun-cloud',mood: 'clear' },
+    2:  { en: 'Partly cloudy',    cn: '局部多云', icon: 'sun-cloud',mood: 'cloudy' },
+    3:  { en: 'Overcast',         cn: '陰',       icon: 'cloud',    mood: 'cloudy' },
+    45: { en: 'Foggy',            cn: '霧',       icon: 'fog',      mood: 'fog' },
+    48: { en: 'Rime fog',         cn: '霧凇',     icon: 'fog',      mood: 'fog' },
+    51: { en: 'Light drizzle',    cn: '小毛雨',   icon: 'drizzle',  mood: 'drizzle' },
+    53: { en: 'Drizzle',          cn: '毛毛雨',   icon: 'drizzle',  mood: 'drizzle' },
+    55: { en: 'Heavy drizzle',    cn: '大毛雨',   icon: 'drizzle',  mood: 'drizzle' },
+    56: { en: 'Freezing drizzle', cn: '凍毛雨',   icon: 'drizzle',  mood: 'drizzle' },
+    57: { en: 'Freezing drizzle', cn: '凍毛雨',   icon: 'drizzle',  mood: 'drizzle' },
+    61: { en: 'Light rain',       cn: '小雨',     icon: 'rain',     mood: 'drizzle' },
+    63: { en: 'Rain',             cn: '中雨',     icon: 'rain',     mood: 'rain' },
+    65: { en: 'Heavy rain',       cn: '大雨',     icon: 'rain',     mood: 'rain' },
+    66: { en: 'Freezing rain',    cn: '凍雨',     icon: 'rain',     mood: 'rain' },
+    67: { en: 'Freezing rain',    cn: '凍雨',     icon: 'rain',     mood: 'rain' },
+    71: { en: 'Light snow',       cn: '小雪',     icon: 'snow',     mood: 'snow' },
+    73: { en: 'Snow',             cn: '中雪',     icon: 'snow',     mood: 'snow' },
+    75: { en: 'Heavy snow',       cn: '大雪',     icon: 'snow',     mood: 'snow' },
+    77: { en: 'Snow grains',      cn: '雪粒',     icon: 'snow',     mood: 'snow' },
+    80: { en: 'Rain showers',     cn: '陣雨',     icon: 'rain',     mood: 'rain' },
+    81: { en: 'Rain showers',     cn: '陣雨',     icon: 'rain',     mood: 'rain' },
+    82: { en: 'Violent showers',  cn: '暴陣雨',   icon: 'rain',     mood: 'thunder' },
+    85: { en: 'Snow showers',     cn: '陣雪',     icon: 'snow',     mood: 'snow' },
+    86: { en: 'Snow showers',     cn: '陣雪',     icon: 'snow',     mood: 'snow' },
+    95: { en: 'Thunderstorm',     cn: '雷陣雨',   icon: 'thunder',  mood: 'thunder' },
+    96: { en: 'Thunderstorm',     cn: '雷陣雨',   icon: 'thunder',  mood: 'thunder' },
+    99: { en: 'Strong thunder',   cn: '強雷暴',   icon: 'thunder',  mood: 'thunder' }
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //   ★  配 乐 板 块  ·  SOUNDTRACK  ·  在这里填你自己的句子  ★
+  // ═══════════════════════════════════════════════════════════════════════
+  //
+  //   ▸ 把想显示的文字写在 引号 '' 之间即可，保存文件、刷新页面就会出现。
+  //   ▸ 想要多句随机出现？把单个字符串换成数组：
+  //         clear: ['第一句', '第二句', '第三句']
+  //   ▸ 想让某种天气什么都不显示？留空字符串 ''，该天气下整个板块会自动隐藏。
+  //   ▸ thunder（雷）和 snow（雪）留空时，会自动 fallback 用 rain 那句。
+  //
+  // ═══════════════════════════════════════════════════════════════════════
+
+  const soundtrack = {
+
+    // 晴朗 / 基本晴朗
+    clear:   ' 蒲公英依旧睡得酣畅 享受着热浪 ',
+
+    // 多云 / 阴天
+    cloudy:  ' 如果我想你三遍 天上乌云就散一点  ',
+
+    // 雾 / 雾凇
+    fog:     ' 你在窗外下了一场大雾 氤氲的把我围住 ',
+
+    // 毛毛雨 / 小雨
+    drizzle: ' 雨天的温柔总是选错拥挤街头 ',
+
+    // 中雨 / 大雨 / 阵雨 / 冻雨
+    rain:    ' 今天雨 可是我们在一起 ',
+
+    // 雷阵雨 / 暴阵雨（留空则自动使用 rain 那句）
+    thunder: ' 我看过沙漠下暴雨 看过大海亲吻鲨鱼 ',
+
+    // 雪（留空则自动使用 rain 那句）
+    snow:    ' 有寂寞有笑雨还有看不见的雪 '
+  };
+
+  // ─── 结束 · 上面这块就是要改的全部内容 ────────────────────────────────────
+
+  function pickSoundtrack(mood) {
+    let v = soundtrack[mood];
+    const isEmpty = x => !x || (Array.isArray(x) && x.every(s => !s || !s.trim()));
+    if (isEmpty(v) && (mood === 'thunder' || mood === 'snow')) v = soundtrack.rain;
+    if (isEmpty(v)) return '';
+    if (Array.isArray(v)) {
+      const usable = v.filter(s => s && s.trim());
+      return usable[Math.floor(Math.random() * usable.length)];
+    }
+    return v.trim();
+  }
+
+  // 合成 mood：任意一城下雨/雷/雪 → 优先取那个；都晴 → clear；否则 cloudy
+  function combineMood(moodA, moodB) {
+    const rank = { thunder: 6, snow: 5, rain: 4, drizzle: 3, fog: 2, cloudy: 1, clear: 0 };
+    return (rank[moodA] ?? 0) >= (rank[moodB] ?? 0) ? moodA : moodB;
+  }
+
+  // ───── 月份牌天气图标（做旧泛黄调色） ─────
+  function iconSVG(type, isDay = true) {
+    const dark  = '#3A2A1A';
+    const gold  = '#A88040';
+    const red   = '#8B3A2E';
+    const blue  = '#4A6478';
+    const cream = '#F0DDB5';
+    const paper = '#E8D4A8';
+
+    switch (type) {
+      case 'sun':
+        if (!isDay) return `
+          <g filter="url(#oil)">
+            <circle cx="40" cy="40" r="22" fill="${cream}" stroke="${dark}" stroke-width="1.6"/>
+            <path d="M48 22 a18 18 0 1 0 14 26 a16 16 0 0 1 -14 -26z" fill="${gold}" stroke="${dark}" stroke-width="1.6" opacity="0.85"/>
+            <circle cx="22" cy="22" r="1.5" fill="${dark}"/>
+            <circle cx="60" cy="58" r="1" fill="${dark}"/>
+          </g>`;
+        return `
+          <g filter="url(#oil)">
+            <circle cx="40" cy="40" r="14" fill="${red}" stroke="${dark}" stroke-width="1.8"/>
+            <circle cx="40" cy="40" r="14" fill="${gold}" opacity="0.55"/>
+            <g stroke="${dark}" stroke-width="1.6" stroke-linecap="round">
+              <line x1="40" y1="12" x2="40" y2="20"/>
+              <line x1="40" y1="60" x2="40" y2="68"/>
+              <line x1="12" y1="40" x2="20" y2="40"/>
+              <line x1="60" y1="40" x2="68" y2="40"/>
+              <line x1="20" y1="20" x2="26" y2="26"/>
+              <line x1="54" y1="54" x2="60" y2="60"/>
+              <line x1="20" y1="60" x2="26" y2="54"/>
+              <line x1="54" y1="26" x2="60" y2="20"/>
+            </g>
+          </g>`;
+      case 'sun-cloud':
+        return `
+          <g filter="url(#oil)">
+            <circle cx="28" cy="28" r="10" fill="${gold}" stroke="${dark}" stroke-width="1.6"/>
+            <g stroke="${dark}" stroke-width="1.4" stroke-linecap="round">
+              <line x1="28" y1="10" x2="28" y2="16"/>
+              <line x1="10" y1="28" x2="16" y2="28"/>
+              <line x1="15" y1="15" x2="19" y2="19"/>
+              <line x1="41" y1="15" x2="37" y2="19"/>
+            </g>
+            <path d="M24 52 a12 12 0 0 1 22 -4 a10 10 0 0 1 8 18 h-32 a10 10 0 0 1 2 -14z"
+                  fill="${cream}" stroke="${dark}" stroke-width="1.6"/>
+            <path d="M28 48 q 4 -4 10 -2" fill="none" stroke="${dark}" stroke-width="1" opacity="0.4"/>
+          </g>`;
+      case 'cloud':
+        return `
+          <g filter="url(#oil)">
+            <path d="M18 50 a14 14 0 0 1 26 -6 a12 12 0 0 1 10 20 h-36 a12 12 0 0 1 0 -14z"
+                  fill="${cream}" stroke="${dark}" stroke-width="1.8"/>
+            <path d="M22 46 q 6 -6 14 -3" fill="none" stroke="${dark}" stroke-width="1.2" opacity="0.5"/>
+            <path d="M30 58 q 8 -3 18 0" fill="none" stroke="${dark}" stroke-width="1" opacity="0.3"/>
+          </g>`;
+      case 'fog':
+        return `
+          <g filter="url(#oil)">
+            <path d="M18 32 a12 12 0 0 1 22 -4 a10 10 0 0 1 8 16 h-30 a10 10 0 0 1 0 -12z"
+                  fill="${cream}" stroke="${dark}" stroke-width="1.6" opacity="0.85"/>
+            <g stroke="${dark}" stroke-width="1.6" stroke-linecap="round" opacity="0.7">
+              <line x1="14" y1="56" x2="56" y2="56"/>
+              <line x1="20" y1="64" x2="62" y2="64"/>
+              <line x1="24" y1="72" x2="50" y2="72"/>
+            </g>
+          </g>`;
+      case 'drizzle':
+        return `
+          <g filter="url(#oil)">
+            <path d="M20 36 a12 12 0 0 1 22 -4 a10 10 0 0 1 8 18 h-30 a10 10 0 0 1 0 -14z"
+                  fill="${cream}" stroke="${dark}" stroke-width="1.6"/>
+            <g stroke="${blue}" stroke-width="2" stroke-linecap="round" opacity="0.85">
+              <line x1="24" y1="58" x2="22" y2="64"/>
+              <line x1="36" y1="58" x2="34" y2="64"/>
+              <line x1="48" y1="58" x2="46" y2="64"/>
+              <line x1="30" y1="66" x2="28" y2="72"/>
+              <line x1="42" y1="66" x2="40" y2="72"/>
+            </g>
+          </g>`;
+      case 'rain':
+        return `
+          <g filter="url(#oil)">
+            <path d="M18 34 a13 13 0 0 1 24 -5 a11 11 0 0 1 10 19 h-32 a11 11 0 0 1 -2 -14z"
+                  fill="${cream}" stroke="${dark}" stroke-width="1.8"/>
+            <g stroke="${blue}" stroke-width="2.4" stroke-linecap="round">
+              <line x1="22" y1="56" x2="18" y2="68"/>
+              <line x1="34" y1="56" x2="30" y2="68"/>
+              <line x1="46" y1="56" x2="42" y2="68"/>
+              <line x1="28" y1="62" x2="24" y2="72"/>
+              <line x1="40" y1="62" x2="36" y2="72"/>
+            </g>
+          </g>`;
+      case 'snow':
+        return `
+          <g filter="url(#oil)">
+            <path d="M18 36 a12 12 0 0 1 22 -4 a10 10 0 0 1 10 18 h-32 a10 10 0 0 1 0 -14z"
+                  fill="${cream}" stroke="${dark}" stroke-width="1.6"/>
+            <g stroke="${dark}" stroke-width="1.4" stroke-linecap="round">
+              <g transform="translate(24 64)"><line x1="-4" y1="0" x2="4" y2="0"/><line x1="0" y1="-4" x2="0" y2="4"/><line x1="-3" y1="-3" x2="3" y2="3"/><line x1="-3" y1="3" x2="3" y2="-3"/></g>
+              <g transform="translate(36 64)"><line x1="-4" y1="0" x2="4" y2="0"/><line x1="0" y1="-4" x2="0" y2="4"/><line x1="-3" y1="-3" x2="3" y2="3"/><line x1="-3" y1="3" x2="3" y2="-3"/></g>
+              <g transform="translate(48 64)"><line x1="-4" y1="0" x2="4" y2="0"/><line x1="0" y1="-4" x2="0" y2="4"/></g>
+            </g>
+          </g>`;
+      case 'thunder':
+        return `
+          <g filter="url(#oil)">
+            <path d="M18 34 a13 13 0 0 1 24 -5 a11 11 0 0 1 10 19 h-32 a11 11 0 0 1 -2 -14z"
+                  fill="${cream}" stroke="${dark}" stroke-width="1.8"/>
+            <path d="M40 52 l-8 14 h7 l-3 12 l11 -16 h-8 l5 -10z"
+                  fill="${gold}" stroke="${dark}" stroke-width="1.6" stroke-linejoin="round"/>
+          </g>`;
+      default:
+        return `<circle cx="40" cy="40" r="14" fill="${gold}" stroke="${dark}" stroke-width="1.6"/>`;
+    }
+  }
+
+  // ───── 今日撕历 + 头部年份（按访客本地时区） ─────
+  const CN_NUM = ['〇','一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  const WEEKDAY_CN = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+
+  // 1 → '一', 20 → '二十', 30 → '三十', 31 → '三十一'
+  function chineseDay(d) {
+    if (d <= 10) return CN_NUM[d];
+    if (d < 20)  return '十' + CN_NUM[d - 10];
+    if (d === 20) return '二十';
+    if (d < 30)  return '二十' + CN_NUM[d - 20];
+    if (d === 30) return '三十';
+    return '三十' + CN_NUM[d - 30];
+  }
+
+  function buildToday() {
+    // 浏览器 Date 默认就是访客本地时区
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth(), d = now.getDate(), wd = now.getDay();
+
+    // 头部年份（公历）
+    const westStr = y.toString().split('').map(c => CN_NUM[+c]).join('');
+    document.getElementById('year-line').innerHTML =
+      `公元 ${westStr} 年 <span class="sep">·</span> <span class="west">${y} A.D.</span>`;
+
+    // 月份红条
+    document.getElementById('month-cn').textContent = CN_NUM[m + 1] + ' 月';
+    document.getElementById('month-en').textContent =
+      now.toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
+
+    // 今日卡片
+    document.getElementById('today-num').textContent = d;
+    document.getElementById('today-wd-cn').textContent = WEEKDAY_CN[wd];
+    document.getElementById('today-wd-en').textContent =
+      now.toLocaleDateString('en-US', { weekday: 'long' });
+    document.getElementById('today-monthyear-en').textContent =
+      now.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() + ' · ' + y;
+    document.getElementById('today-monthyear-cn').textContent =
+      CN_NUM[m + 1] + ' 月 · ' + chineseDay(d);
+
+    // 访客本地时区
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+    const short = tzLabel(tz).toLowerCase() || 'local time';
+    document.getElementById('today-tz').textContent = `本機時區 ${tz} · ${short}`;
+  }
+
+  // ───── 24 节气 ─────
+  // 公式精度 ±1 日（1900–2100），适用于挂历展示
+  const TERMS_CN = ['小寒','大寒','立春','雨水','驚蟄','春分','清明','穀雨',
+                    '立夏','小滿','芒種','夏至','小暑','大暑','立秋','處暑',
+                    '白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至'];
+  // 2000 年各节气的基准日（1 月起，每月 2 个）
+  const TERM_BASE = [
+    5.4055, 20.12,  3.87,  18.73, 5.63,  20.646,
+    4.81,   20.1,   5.52,  21.04, 5.678, 21.37,
+    7.108,  22.83,  7.5,   23.13, 7.646, 23.042,
+    8.318,  23.438, 7.438, 22.36, 7.18,  21.94
+  ];
+
+  function termDay(year, idx) {
+    return Math.floor(TERM_BASE[idx] + 0.2422 * (year - 2000)) - Math.floor((year - 2000) / 4);
+  }
+
+  function currentSolarTerm(date = new Date()) {
+    const y = date.getFullYear();
+    const ms = date.getTime();
+    let last = null;
+    // 从去年冬至开始扫
+    for (let i = 23; i >= 22; i--) {
+      const m = Math.floor(i / 2);
+      const d = termDay(y - 1, i);
+      const td = new Date(y - 1, m, d);
+      if (td.getTime() <= ms) last = { name: TERMS_CN[i], date: td };
+    }
+    for (let i = 0; i < 24; i++) {
+      const m = Math.floor(i / 2);
+      const d = termDay(y, i);
+      const td = new Date(y, m, d);
+      if (td.getTime() <= ms) last = { name: TERMS_CN[i], date: td };
+      else break;
+    }
+    return last ? last.name : TERMS_CN[0];
+  }
+
+  // ───── 实时时钟 ─────
+  function tzLabel(tz) {
+    try {
+      const part = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
+        .formatToParts(new Date()).find(p => p.type === 'timeZoneName');
+      return part ? part.value : '';
+    } catch (e) { return ''; }
+  }
+
+  function updateClock(prefix, tz) {
+    const fmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false
+    });
+    const parts = fmt.formatToParts(new Date());
+    const get = t => parts.find(p => p.type === t)?.value || '--';
+    document.getElementById(`${prefix}-hh`).textContent = get('hour');
+    document.getElementById(`${prefix}-mm`).textContent = get('minute');
+  }
+
+  const PA_TZ = 'America/Los_Angeles';
+  const KM_TZ = 'Asia/Shanghai';
+  document.getElementById('pa-tz').textContent = '— ' + tzLabel(PA_TZ).toLowerCase() + ' —';
+  document.getElementById('km-tz').textContent = '— ' + tzLabel(KM_TZ).toLowerCase() + ' —';
+
+  function tickClocks() {
+    updateClock('pa', PA_TZ);
+    updateClock('km', KM_TZ);
+  }
+
+  // ───── 工具 ─────
+  function fmtDay(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { weekday: 'short' });
+  }
+
+  // ───── 数据缓存 (合成配乐用) ─────
+  const cityMoods = {};
+
+  function updateSoundtrack() {
+    const moods = Object.values(cityMoods);
+    if (moods.length < 2) return;
+    const combined = moods.reduce((a, b) => combineMood(a, b));
+    const verse = pickSoundtrack(combined);
+    const stEl = document.getElementById('soundtrack');
+    if (verse) {
+      document.getElementById('poem').textContent = verse;
+      stEl.style.display = '';
+    } else {
+      stEl.style.display = 'none';
+    }
+  }
+
+  // ───── 动态双景：sun/moon swap + 天气覆盖层 ─────
+  const SCENE = {
+    L: { cx: 80,  cy: 70 },
+    R: { cx: 720, cy: 68 }
+  };
+
+  function sunSVG(side, opacity) {
+    const c = SCENE[side], R = 26;
+    return `
+      <g filter="url(#oil)" opacity="${opacity}">
+        <circle cx="${c.cx}" cy="${c.cy}" r="${R}" fill="#8B3A2E" opacity="0.92"/>
+        <circle cx="${c.cx}" cy="${c.cy}" r="${R}" fill="#A88040" opacity="0.45"/>
+        <g stroke="#806030" stroke-width="1.6" stroke-linecap="round" opacity="0.75">
+          <line x1="${c.cx}" y1="${c.cy-R-14}" x2="${c.cx}" y2="${c.cy-R-4}"/>
+          <line x1="${c.cx}" y1="${c.cy+R+4}"  x2="${c.cx}" y2="${c.cy+R+14}"/>
+          <line x1="${c.cx-R-14}" y1="${c.cy}" x2="${c.cx-R-4}" y2="${c.cy}"/>
+          <line x1="${c.cx+R+4}"  y1="${c.cy}" x2="${c.cx+R+14}" y2="${c.cy}"/>
+          <line x1="${c.cx-R+2}"  y1="${c.cy-R+2}" x2="${c.cx-R-7}" y2="${c.cy-R-7}"/>
+          <line x1="${c.cx+R-2}"  y1="${c.cy-R+2}" x2="${c.cx+R+7}" y2="${c.cy-R-7}"/>
+          <line x1="${c.cx-R+2}"  y1="${c.cy+R-2}" x2="${c.cx-R-7}" y2="${c.cy+R+7}"/>
+          <line x1="${c.cx+R-2}"  y1="${c.cy+R-2}" x2="${c.cx+R+7}" y2="${c.cy+R+7}"/>
+        </g>
+      </g>`;
+  }
+
+  function moonSVG(side, opacity) {
+    const c = SCENE[side];
+    return `
+      <g filter="url(#oil)" opacity="${opacity}">
+        <circle cx="${c.cx}" cy="${c.cy}" r="24" fill="#F0DDB5" stroke="#806030" stroke-width="1.4" opacity="0.95"/>
+        <path d="M${c.cx+10} ${c.cy-12} a18 18 0 1 0 12 24 a16 16 0 0 1 -12 -24z" fill="#A88040" opacity="0.4"/>
+        <circle cx="${c.cx-10}" cy="${c.cy-6}"  r="2"   fill="#806030" opacity="0.55"/>
+        <circle cx="${c.cx+4}"  cy="${c.cy+10}" r="1.5" fill="#806030" opacity="0.45"/>
+        <circle cx="${c.cx-5}"  cy="${c.cy+12}" r="1"   fill="#806030" opacity="0.35"/>
+      </g>`;
+  }
+
+  // 星星固定位置（每边 10 颗）
+  const STARS = {
+    L: [[40,32],[180,22],[260,42],[348,18],[120,58],[300,12],[222,68],[60,92],[140,12],[330,82]],
+    R: [[440,36],[562,18],[680,46],[770,28],[500,62],[622,14],[750,72],[460,86],[540,10],[700,92]]
+  };
+
+  function starsSVG(side, count) {
+    return STARS[side].slice(0, count).map(([x, y], i) => {
+      const r = 0.9 + (i % 3) * 0.4;
+      const dur = 2.2 + (i % 4) * 0.6;
+      const beg = ((i * 0.4) % 2).toFixed(2);
+      return `<circle cx="${x}" cy="${y}" r="${r}" fill="#F0DDB5" opacity="0.75">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="${dur}s" begin="${beg}s" repeatCount="indefinite"/>
+      </circle>`;
+    }).join('');
+  }
+
+  function cloudsSVG(side, intensity, isDay) {
+    const xBase = side === 'L' ? 0 : 400;
+    const fill   = isDay ? '#F0DDB5' : '#5A5060';
+    const stroke = isDay ? '#7A5D3E' : '#3A3540';
+    const opa = { wisp: 0.55, normal: 0.78, heavy: 0.92, storm: 0.95 }[intensity] || 0.75;
+    const sw  = intensity === 'storm' ? 1.4 : 1;
+    const count = intensity === 'wisp' ? 1 : (intensity === 'storm' || intensity === 'heavy' ? 3 : 2);
+    let s = '';
+    s += `<g filter="url(#oil)" opacity="${opa}">
+      <path d="M${xBase + 60} 96 q 16 -14 36 -6 q 22 -10 42 0 q 16 6 6 18 q -12 8 -28 4 q -18 8 -36 0 q -18 -4 -20 -16z"
+            fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+    </g>`;
+    if (count >= 2) {
+      s += `<g filter="url(#oil)" opacity="${(opa * 0.85).toFixed(2)}">
+        <path d="M${xBase + 200} 62 q 14 -12 32 -4 q 20 -8 36 0 q 14 6 4 16 q -10 6 -24 2 q -16 6 -32 0 q -16 -4 -16 -14z"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+      </g>`;
+    }
+    if (count >= 3) {
+      s += `<g filter="url(#oil)" opacity="${(opa * 0.7).toFixed(2)}">
+        <path d="M${xBase + 130} 38 q 12 -10 26 -4 q 18 -8 32 0 q 12 6 4 14 q -10 6 -22 2 q -14 6 -28 0 q -14 -4 -12 -12z"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+      </g>`;
+    }
+    return s;
+  }
+
+  function fogSVG(side) {
+    const xBase = side === 'L' ? 0 : 400;
+    let s = '<g opacity="0.75">';
+    for (let i = 0; i < 6; i++) {
+      const y = 90 + i * 24;
+      const len = 220 + (i % 2) * 60;
+      const xs = xBase + 10 + (i * 28) % 110;
+      const opa = (0.35 + (i % 3) * 0.18).toFixed(2);
+      const dur = (10 + i * 1.5).toFixed(1);
+      const drift = (i % 2 === 0 ? 24 : -24);
+      s += `<rect x="${xs}" y="${y}" width="${len}" height="7" rx="3"
+              fill="#F0DDB5" stroke="#806030" stroke-width="0.4" opacity="${opa}">
+        <animateTransform attributeName="transform" type="translate"
+          values="0 0; ${drift} 0; 0 0" dur="${dur}s" repeatCount="indefinite"/>
+      </rect>`;
+    }
+    s += '</g>';
+    return s;
+  }
+
+  function rainSVG(side, intensity) {
+    const xBase = side === 'L' ? 0 : 400;
+    const count = intensity === 'rain' ? 20 : 10;
+    const sw = intensity === 'rain' ? 1.4 : 1;
+    const len = intensity === 'rain' ? 14 : 8;
+    let s = '';
+    for (let i = 0; i < count; i++) {
+      const x = xBase + 18 + Math.floor((i * 380 / count) % 360) + ((i % 3) * 6);
+      const y0 = -30 - (i % 5) * 14;
+      const dur = (0.85 + (i % 5) * 0.18).toFixed(2);
+      const beg = (-((i * 0.13) % 1.4)).toFixed(2);
+      s += `<line x1="${x}" y1="${y0}" x2="${x - 3}" y2="${y0 + len}"
+               stroke="#4A6478" stroke-width="${sw}" stroke-linecap="round" opacity="0.7">
+        <animateTransform attributeName="transform" type="translate"
+          values="0 0; 0 340" dur="${dur}s" begin="${beg}s" repeatCount="indefinite"/>
+      </line>`;
+    }
+    return s;
+  }
+
+  function snowSVG(side) {
+    const xBase = side === 'L' ? 0 : 400;
+    const count = 16;
+    let s = '';
+    for (let i = 0; i < count; i++) {
+      const x = xBase + 14 + Math.floor((i * 380 / count) % 370) + ((i % 4) * 5);
+      const y0 = -16 - (i % 5) * 14;
+      const r = (1.1 + (i % 4) * 0.5).toFixed(1);
+      const dur = (5 + (i % 5) * 1.4).toFixed(1);
+      const beg = (-((i * 0.6) % 5)).toFixed(2);
+      const drift = (i % 2 === 0 ? 22 : -22);
+      s += `<g>
+        <circle cx="${x}" cy="${y0}" r="${r}" fill="#F0DDB5" stroke="#806030" stroke-width="0.4" opacity="0.88"/>
+        <animateTransform attributeName="transform" type="translate"
+          values="0 0; ${drift} 320" dur="${dur}s" begin="${beg}s" repeatCount="indefinite"/>
+      </g>`;
+    }
+    return s;
+  }
+
+  function lightningSVG(side) {
+    const xBase = side === 'L' ? 0 : 400;
+    const x = xBase + 160 + Math.floor(Math.random() * 80);
+    return `
+      <g opacity="0">
+        <rect x="${xBase}" y="0" width="400" height="280" fill="#F0DDB5" opacity="0.5"/>
+        <animate attributeName="opacity"
+          values="0;0;0;0;0;0;0.6;0;0.4;0;0;0;0;0;0;0;0;0;0;0;0;0"
+          dur="6s" repeatCount="indefinite"/>
+      </g>
+      <g opacity="0">
+        <path d="M${x} 50 l-9 56 h11 l-7 56 l20 -66 h-11 l8 -46z"
+              fill="#F0DDB5" stroke="#806030" stroke-width="1.4" stroke-linejoin="round"/>
+        <animate attributeName="opacity"
+          values="0;0;0;0;0;0;1;0;0.85;0;0;0;0;0;0;0;0;0;0;0;0;0"
+          dur="6s" repeatCount="indefinite"/>
+      </g>`;
+  }
+
+  // 主入口：根据 isDay + mood 重渲染一边
+  function updateScene(side, isDay, mood) {
+    // 天空
+    document.getElementById(`sky-${side}`)
+      .setAttribute('fill', `url(#sky${side}-${isDay ? 'day' : 'night'})`);
+
+    // 压暗层
+    const stormMap = { thunder: 0.42, rain: 0.28, snow: 0.16, drizzle: 0.14, fog: 0.10, cloudy: 0.06, clear: 0 };
+    const baseOpa = stormMap[mood] ?? 0;
+    document.getElementById(`storm-${side}`)
+      .setAttribute('opacity', (isDay ? baseOpa : baseOpa * 0.6).toFixed(2));
+
+    // 日月
+    const dim = ['cloudy','fog','rain','drizzle','snow','thunder'].includes(mood);
+    const celOpa = mood === 'thunder' ? 0.22 : (dim ? 0.55 : 1);
+    document.getElementById(`celestial-${side}`).innerHTML =
+      isDay ? sunSVG(side, celOpa) : moonSVG(side, celOpa);
+
+    // 背景天气：星/云/雾
+    let bg = '';
+    if (!isDay && !['thunder','rain','snow'].includes(mood)) {
+      bg += starsSVG(side, mood === 'clear' ? 10 : (mood === 'cloudy' ? 4 : 6));
+    }
+    if (mood === 'cloudy')  bg += cloudsSVG(side, 'normal', isDay);
+    if (mood === 'fog')     { bg += cloudsSVG(side, 'wisp', isDay); bg += fogSVG(side); }
+    if (mood === 'drizzle') bg += cloudsSVG(side, 'normal', isDay);
+    if (mood === 'rain')    bg += cloudsSVG(side, 'heavy', isDay);
+    if (mood === 'snow')    bg += cloudsSVG(side, 'normal', isDay);
+    if (mood === 'thunder') bg += cloudsSVG(side, 'storm', false);
+    document.getElementById(`weather-bg-${side}`).innerHTML = bg;
+
+    // 前景天气：雨/雪/闪电
+    let fg = '';
+    if (mood === 'drizzle') fg += rainSVG(side, 'drizzle');
+    if (mood === 'rain')    fg += rainSVG(side, 'rain');
+    if (mood === 'thunder') { fg += rainSVG(side, 'rain'); fg += lightningSVG(side); }
+    if (mood === 'snow')    fg += snowSVG(side);
+    document.getElementById(`weather-fg-${side}`).innerHTML = fg;
+
+    // 文字配色切换
+    const halfEl = document.querySelector(`.scene-half.${side === 'L' ? 'left' : 'right'}`);
+    if (halfEl) halfEl.classList.toggle('night', !isDay);
+  }
+
+  // 用本地时区粗略猜白天/黑夜（fetch 返回前的占位）
+  function guessIsDay(tz) {
+    try {
+      const h = parseInt(new Intl.DateTimeFormat('en-GB', {
+        timeZone: tz, hour: '2-digit', hour12: false
+      }).format(new Date()), 10);
+      return h >= 6 && h < 19;
+    } catch (e) { return true; }
+  }
+
+  // ───── 拉取并渲染单个城市 ─────
+  async function loadCity({ cityId, lat, lon }) {
+    const cityEl = document.getElementById(`city-${cityId}`);
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,weather_code,is_day` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset` +
+        `&temperature_unit=celsius` +
+        `&timezone=auto&forecast_days=4`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('fetch failed');
+      const data = await res.json();
+
+      const cur = data.current;
+      const curInfo = codeMap[cur.weather_code] || { en: '—', cn: '—', icon: 'cloud', mood: 'cloudy' };
+
+      // 插画上的温度
+      document.getElementById(`${cityId}-temp`).innerHTML =
+        `${Math.round(cur.temperature_2m)}<span class="u">°C</span>`;
+
+      // city-strip
+      document.getElementById(`${cityId}-cond-cn`).textContent = curInfo.cn;
+      document.getElementById(`${cityId}-cond-en`).textContent = curInfo.en;
+      document.getElementById(`${cityId}-icon`).innerHTML = iconSVG(curInfo.icon, cur.is_day === 1);
+
+      // 日出日落
+      const sunriseISO = data.daily.sunrise[0];
+      const sunsetISO  = data.daily.sunset[0];
+      document.getElementById(`${cityId}-sunrise`).textContent = sunriseISO ? sunriseISO.slice(11, 16) : '—';
+      document.getElementById(`${cityId}-sunset`).textContent  = sunsetISO  ? sunsetISO.slice(11, 16)  : '—';
+
+      // 三日预报
+      const fcEl = document.getElementById(`${cityId}-forecast`);
+      // 清掉旧的 fc-mini，保留 label
+      fcEl.querySelectorAll('.fc-mini').forEach(el => el.remove());
+      for (let i = 1; i <= 3; i++) {
+        const dayCode = data.daily.weather_code[i];
+        const dayInfo = codeMap[dayCode] || { en: '—', cn: '—', icon: 'cloud' };
+        const hi = Math.round(data.daily.temperature_2m_max[i]);
+        const lo = Math.round(data.daily.temperature_2m_min[i]);
+        const day = fmtDay(data.daily.time[i]);
+
+        const mini = document.createElement('div');
+        mini.className = 'fc-mini';
+        mini.innerHTML = `
+          <div class="fc-day">${day}</div>
+          <div class="fc-temps"><span class="hi">${hi}°</span><span class="lo">/${lo}°</span></div>
+          <div class="fc-cn">${dayInfo.cn}</div>
+        `;
+        fcEl.appendChild(mini);
+      }
+
+      // 动态场景：根据 is_day + mood 重画插画半边
+      updateScene(cityId === 'pa' ? 'L' : 'R', cur.is_day === 1, curInfo.mood);
+
+      cityEl.classList.remove('loading');
+      cityMoods[cityId] = curInfo.mood;
+      updateSoundtrack();
+    } catch (err) {
+      console.error(err);
+      cityEl.classList.remove('loading');
+      cityEl.classList.add('error');
+    }
+  }
+
+  // ───── 启动 ─────
+  buildToday();
+  document.getElementById('solar-term').textContent = currentSolarTerm();
+  tickClocks();
+  setInterval(tickClocks, 1000);
+  // 跨日时自动刷新今日卡片（每分钟检查一次是否到了第二天）
+  let lastDay = new Date().getDate();
+  setInterval(() => {
+    const d = new Date().getDate();
+    if (d !== lastDay) { lastDay = d; buildToday(); document.getElementById('solar-term').textContent = currentSolarTerm(); }
+  }, 60000);
+
+  // fetch 之前先渲染一个像样的初始画面（按本地时区猜白天/黑夜）
+  updateScene('L', guessIsDay(PA_TZ), 'clear');
+  updateScene('R', guessIsDay(KM_TZ), 'clear');
+
+  loadCity({ cityId: 'pa', lat: 37.4419, lon: -122.143 });
+  loadCity({ cityId: 'km', lat: 25.0389, lon: 102.7183 });
+</script>
+</body>
+</html>
