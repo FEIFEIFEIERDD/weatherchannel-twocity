@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>妳那里是什么天气</title>
+<title>你那里是什么天气</title>
 <link rel="preconnect" href="https://fonts.font.im" crossorigin>
 <link href="https://fonts.font.im/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Pinyon+Script&family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -1039,7 +1039,7 @@
       <span class="sep">·</span>
       <span class="west">A.D. 2026</span>
     </div>
-    <div class="brand-cn">妳那里是什么天气</div>
+    <div class="brand-cn">你那里是什么天气</div>
     <div class="brand-en">— What's the weather like in your city? —</div>
   </header>
 
@@ -1202,7 +1202,7 @@
   <div class="month-banner">
     <span class="month-cn" id="month-cn">— 月</span>
     <span class="month-en" id="month-en">—</span>
-    <span class="solar-term"><span class="label">節氣</span><b id="solar-term">—</b></span>
+    <span class="solar-term"><span class="label">节气</span><b id="solar-term">—</b></span>
   </div>
 
   <!-- 今日撕历 -->
@@ -1223,7 +1223,7 @@
 
   <!-- 两埠晴雨 -->
   <div class="cities">
-    <div class="cities-head">兩 埠 晴 雨 <span class="en">— Two Ports —</span></div>
+    <div class="cities-head">两 埠 晴 雨 <span class="en">— Two Ports —</span></div>
 
     <section class="city-strip loading" id="city-pa">
       <svg class="cs-icon" id="pa-icon" viewBox="0 0 80 80"></svg>
@@ -1243,10 +1243,10 @@
       </div>
       <div class="hourly-detail" data-slot="current"></div>
       <div class="cs-forecast" id="pa-forecast">
-        <div class="cs-fc-lbl">未來三日</div>
+        <div class="cs-fc-lbl">未来三日</div>
       </div>
       <div class="hourly-detail" data-slot="forecast"></div>
-      <div class="err">無法取得天氣 · Unable to load weather</div>
+      <div class="err">无法取得天气 · Unable to load weather</div>
     </section>
 
     <section class="city-strip loading" id="city-km">
@@ -1267,10 +1267,10 @@
       </div>
       <div class="hourly-detail" data-slot="current"></div>
       <div class="cs-forecast" id="km-forecast">
-        <div class="cs-fc-lbl">未來三日</div>
+        <div class="cs-fc-lbl">未来三日</div>
       </div>
       <div class="hourly-detail" data-slot="forecast"></div>
-      <div class="err">無法取得天氣 · Unable to load weather</div>
+      <div class="err">无法取得天气 · Unable to load weather</div>
     </section>
   </div>
 
@@ -1283,7 +1283,7 @@
   <!-- 印记 -->
   <footer class="colophon">
     <div class="colophon-en">~ Compiled on every viewing ~</div>
-    開放氣象資料 · 印製 · 每閱即新
+    开放气象資料 · 印製 · 每閱即新
   </footer>
 
 </div>
@@ -1295,19 +1295,19 @@
     0:  { en: 'Clear sky',        cn: '晴朗',     icon: 'sun',      mood: 'clear' },
     1:  { en: 'Mainly clear',     cn: '基本晴朗', icon: 'sun-cloud',mood: 'clear' },
     2:  { en: 'Partly cloudy',    cn: '局部多云', icon: 'sun-cloud',mood: 'cloudy' },
-    3:  { en: 'Overcast',         cn: '陰',       icon: 'cloud',    mood: 'cloudy' },
-    45: { en: 'Foggy',            cn: '霧',       icon: 'fog',      mood: 'fog' },
-    48: { en: 'Rime fog',         cn: '霧凇',     icon: 'fog',      mood: 'fog' },
+    3:  { en: 'Overcast',         cn: '阴',       icon: 'cloud',    mood: 'cloudy' },
+    45: { en: 'Foggy',            cn: '雾',       icon: 'fog',      mood: 'fog' },
+    48: { en: 'Rime fog',         cn: '雾凇',     icon: 'fog',      mood: 'fog' },
     51: { en: 'Light drizzle',    cn: '小毛雨',   icon: 'drizzle',  mood: 'drizzle' },
     53: { en: 'Drizzle',          cn: '毛毛雨',   icon: 'drizzle',  mood: 'drizzle' },
     55: { en: 'Heavy drizzle',    cn: '大毛雨',   icon: 'drizzle',  mood: 'drizzle' },
-    56: { en: 'Freezing drizzle', cn: '凍毛雨',   icon: 'drizzle',  mood: 'drizzle' },
-    57: { en: 'Freezing drizzle', cn: '凍毛雨',   icon: 'drizzle',  mood: 'drizzle' },
+    56: { en: 'Freezing drizzle', cn: '冻毛雨',   icon: 'drizzle',  mood: 'drizzle' },
+    57: { en: 'Freezing drizzle', cn: '冻毛雨',   icon: 'drizzle',  mood: 'drizzle' },
     61: { en: 'Light rain',       cn: '小雨',     icon: 'rain',     mood: 'drizzle' },
     63: { en: 'Rain',             cn: '中雨',     icon: 'rain',     mood: 'rain' },
     65: { en: 'Heavy rain',       cn: '大雨',     icon: 'rain',     mood: 'rain' },
-    66: { en: 'Freezing rain',    cn: '凍雨',     icon: 'rain',     mood: 'rain' },
-    67: { en: 'Freezing rain',    cn: '凍雨',     icon: 'rain',     mood: 'rain' },
+    66: { en: 'Freezing rain',    cn: '冻雨',     icon: 'rain',     mood: 'rain' },
+    67: { en: 'Freezing rain',    cn: '冻雨',     icon: 'rain',     mood: 'rain' },
     71: { en: 'Light snow',       cn: '小雪',     icon: 'snow',     mood: 'snow' },
     73: { en: 'Snow',             cn: '中雪',     icon: 'snow',     mood: 'snow' },
     75: { en: 'Heavy snow',       cn: '大雪',     icon: 'snow',     mood: 'snow' },
@@ -1319,7 +1319,7 @@
     86: { en: 'Snow showers',     cn: '陣雪',     icon: 'snow',     mood: 'snow' },
     95: { en: 'Thunderstorm',     cn: '雷陣雨',   icon: 'thunder',  mood: 'thunder' },
     96: { en: 'Thunderstorm',     cn: '雷陣雨',   icon: 'thunder',  mood: 'thunder' },
-    99: { en: 'Strong thunder',   cn: '強雷暴',   icon: 'thunder',  mood: 'thunder' }
+    99: { en: 'Strong thunder',   cn: '强雷暴',   icon: 'thunder',  mood: 'thunder' }
   };
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -1536,13 +1536,13 @@
     // 访客本地时区
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
     const short = tzLabel(tz).toLowerCase() || 'local time';
-    document.getElementById('today-tz').textContent = `本機時區 ${tz} · ${short}`;
+    document.getElementById('today-tz').textContent = `本机時區 ${tz} · ${short}`;
   }
 
   // ───── 24 节气 ─────
   // 公式精度 ±1 日（1900–2100），适用于挂历展示
-  const TERMS_CN = ['小寒','大寒','立春','雨水','驚蟄','春分','清明','穀雨',
-                    '立夏','小滿','芒種','夏至','小暑','大暑','立秋','處暑',
+  const TERMS_CN = ['小寒','大寒','立春','雨水','惊蛰','春分','清明','谷雨',
+                    '立夏','小满','芒种','夏至','小暑','大暑','立秋','处暑',
                     '白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至'];
   // 2000 年各节气的基准日（1 月起，每月 2 个）
   const TERM_BASE = [
@@ -1919,12 +1919,12 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  //   ★  細圖之一 · 時辰起伏  ·  Hourly Disposition  ★
+  //   ★  细图之一 · 時辰起伏  ·  Hourly Disposition  ★
   // ═══════════════════════════════════════════════════════════════════════
   let activeDetail = null; // { cityId, dayIdx } | null
 
   const ROMAN        = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ'];
-  const CN_DAY_LABEL = ['今日', '明日', '後日', '大後日'];
+  const CN_DAY_LABEL = ['今日', '明日', '后日', '大后日'];
   const DIR_CN       = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
 
   // 把 hourly 数据按 daily.time[dayIdx] 切出 24 小时
@@ -2115,7 +2115,7 @@
     const winDir = slice.windDir;
     const windsOk = winds.filter(v => v != null);
 
-    // 最高溫
+    // 最高温
     const argMax = temps.reduce((mi, v, i, a) => (v > a[mi] ? i : mi), 0);
     const peakHtml = `<span class="val hi">${Math.round(temps[argMax])}°<span class="cn">於 ${String(argMax).padStart(2, '0')}:00</span></span>`;
 
@@ -2137,7 +2137,7 @@
       const eH = String((bestStart + bestLen) % 24).padStart(2, '0');
       precipHtml = `<span class="val lo">${sH}:00 – ${eH}:00<span class="cn">約 ${sumMm.toFixed(1)} mm</span></span>`;
     } else {
-      precipHtml = `<span class="val"><span class="cn">全日無雨</span></span>`;
+      precipHtml = `<span class="val"><span class="cn">全日无雨</span></span>`;
     }
 
     // 湿度
@@ -2166,17 +2166,17 @@
         if (meanDeg < 0) meanDeg += 360;
         dirCn = DIR_CN[Math.round(meanDeg / 45) % 8];
       }
-      windHtml = `<span class="val">${wMin.toFixed(1)} – ${wMax.toFixed(1)} m/s${dirCn ? `<span class="cn">${dirCn}風</span>` : ''}</span>`;
+      windHtml = `<span class="val">${wMin.toFixed(1)} – ${wMax.toFixed(1)} m/s${dirCn ? `<span class="cn">${dirCn}风</span>` : ''}</span>`;
     } else {
       windHtml = `<span class="val">—</span>`;
     }
 
     return `
       <div class="detail-notes">
-        <div class="row"><span class="lbl">最高溫</span>${peakHtml}</div>
+        <div class="row"><span class="lbl">最高温</span>${peakHtml}</div>
         <div class="row"><span class="lbl">降水</span>${precipHtml}</div>
-        <div class="row"><span class="lbl">濕度</span>${humidHtml}</div>
-        <div class="row"><span class="lbl">風力</span>${windHtml}</div>
+        <div class="row"><span class="lbl">湿度</span>${humidHtml}</div>
+        <div class="row"><span class="lbl">风力</span>${windHtml}</div>
       </div>`;
   }
 
