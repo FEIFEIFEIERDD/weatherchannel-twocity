@@ -934,9 +934,330 @@
     .sound-poem { font-size: 19px; line-height: 1.55; }
     .seal-corner { width: 32px; height: 32px; font-size: 18px; top: -14px; left: 10px; }
   }
+
+  /* ══════════════════════════════════════════════════════════════════
+     ★  祝贺动画 · 弹窗 + 顶部横幅  ★
+     ══════════════════════════════════════════════════════════════════ */
+
+  /* ── 顶部悬挂横幅 ─────────────── */
+  body.has-banner { padding-top: 56px; }
+
+  .celebrate-banner {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 12px 56px;
+    background:
+      linear-gradient(180deg, var(--red-bright) 0%, var(--red) 50%, var(--red-deep) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    box-shadow:
+      inset 0 0 0 2px var(--gold-soft),
+      inset 0 0 0 3px var(--red-deep),
+      inset 0 0 0 4px var(--gold),
+      inset 0 -1px 0 rgba(58, 24, 12, 0.6),
+      0 4px 14px rgba(58, 24, 12, 0.45);
+    transform: translateY(-100%);
+    opacity: 0;
+    transition:
+      transform 520ms cubic-bezier(.4, 0, .2, 1),
+      opacity 420ms ease;
+  }
+  .celebrate-banner.open { transform: translateY(0); opacity: 1; }
+  .celebrate-banner.closing { transform: translateY(-100%); opacity: 0; }
+
+  .celebrate-banner::before,
+  .celebrate-banner::after {
+    content: '❀';
+    color: var(--gold-soft);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .celebrate-banner .banner-text {
+    font-family: 'Ma Shan Zheng', 'Noto Serif SC', cursive;
+    font-size: 22px;
+    color: var(--paper-light);
+    letter-spacing: 0.32em;
+    padding-left: 0.32em;
+    text-shadow:
+      0 1px 0 var(--red-deep),
+      0 2px 4px rgba(58, 24, 12, 0.45);
+    white-space: nowrap;
+  }
+
+  .banner-close {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: var(--paper-light);
+    color: var(--red-deep);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow:
+      inset 0 0 0 1.5px var(--gold-deep),
+      0 1px 3px rgba(58, 24, 12, 0.35);
+    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+  }
+  .banner-close:hover {
+    background: var(--gold-soft);
+    color: var(--red-deep);
+    transform: translateY(-50%) scale(1.08);
+  }
+
+  /* ── 祝贺弹窗 ─────────────── */
+  .celebrate-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(58, 24, 12, 0);
+    -webkit-backdrop-filter: blur(0px);
+    backdrop-filter: blur(0px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition:
+      background-color 320ms ease,
+      backdrop-filter 320ms ease,
+      -webkit-backdrop-filter 320ms ease;
+  }
+  .celebrate-modal.open {
+    background: rgba(58, 24, 12, 0.55);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  .celebrate-modal.closing {
+    background: rgba(58, 24, 12, 0);
+    -webkit-backdrop-filter: blur(0px);
+    backdrop-filter: blur(0px);
+  }
+
+  .celebrate-card {
+    position: relative;
+    width: min(460px, 88vw);
+    padding: 48px 40px 36px;
+    background:
+      linear-gradient(155deg, var(--paper-light) 0%, var(--paper) 40%, var(--paper-deep) 100%);
+    border: 1.5px solid var(--gold-deep);
+    box-shadow:
+      inset 0 0 0 4px var(--paper),
+      inset 0 0 0 5px var(--gold),
+      inset 0 0 0 9px var(--paper),
+      inset 0 0 0 10px var(--gold-soft),
+      0 12px 40px rgba(58, 24, 12, 0.55);
+    text-align: center;
+    transform: scale(0.5);
+    opacity: 0;
+    transition:
+      transform 500ms cubic-bezier(.34, 1.56, .64, 1),
+      opacity 380ms ease;
+  }
+  .celebrate-modal.open .celebrate-card { transform: scale(1); opacity: 1; }
+  .celebrate-modal.closing .celebrate-card {
+    transform: scale(0.85);
+    opacity: 0;
+    transition:
+      transform 320ms ease,
+      opacity 280ms ease;
+  }
+
+  .celebrate-seal {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-4deg);
+    width: 44px;
+    height: 44px;
+    background: var(--red);
+    color: var(--paper-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 24px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--paper-light),
+      inset 0 0 0 2.5px var(--red),
+      0 3px 6px rgba(58, 24, 12, 0.4);
+    opacity: 0;
+    animation: celebrate-pop 600ms cubic-bezier(.34, 1.56, .64, 1) 280ms forwards;
+  }
+
+  .celebrate-greet {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 36px;
+    color: var(--red-deep);
+    letter-spacing: 0.4em;
+    padding-left: 0.4em;
+    margin-top: 12px;
+    text-shadow:
+      1px 1px 0 rgba(168, 128, 64, 0.35),
+      2px 2px 4px rgba(58, 24, 12, 0.18);
+    opacity: 0;
+    animation: celebrate-rise 520ms ease-out 420ms forwards;
+  }
+
+  .celebrate-main {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 44px;
+    color: var(--ink);
+    letter-spacing: 0.16em;
+    padding-left: 0.16em;
+    line-height: 1.3;
+    margin: 18px 0 12px;
+    text-shadow:
+      1px 1px 0 rgba(168, 128, 64, 0.4),
+      2px 3px 6px rgba(58, 24, 12, 0.22);
+    opacity: 0;
+    animation: celebrate-rise 560ms ease-out 560ms forwards;
+  }
+  .celebrate-main .accent { color: var(--red-deep); }
+
+  .celebrate-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--brown);
+    letter-spacing: 0.18em;
+    margin: 6px 0 26px;
+    opacity: 0;
+    animation: celebrate-rise 520ms ease-out 700ms forwards;
+  }
+  .celebrate-en::before,
+  .celebrate-en::after {
+    content: '·';
+    color: var(--gold-deep);
+    margin: 0 8px;
+  }
+
+  .celebrate-close {
+    display: inline-block;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--paper-light);
+    background: var(--red);
+    padding: 10px 32px 12px;
+    letter-spacing: 0.4em;
+    padding-left: calc(32px + 0.4em);
+    border: none;
+    cursor: pointer;
+    box-shadow:
+      inset 0 0 0 2px var(--paper-light),
+      inset 0 0 0 3px var(--red),
+      0 2px 0 var(--red-deep),
+      0 4px 8px rgba(58, 24, 12, 0.35);
+    text-shadow: 0 1px 0 rgba(110, 42, 32, 0.6);
+    opacity: 0;
+    animation: celebrate-rise 480ms ease-out 840ms forwards;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .celebrate-close:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 0 0 2px var(--paper-light),
+      inset 0 0 0 3px var(--red),
+      0 3px 0 var(--red-deep),
+      0 6px 12px rgba(58, 24, 12, 0.4);
+  }
+  .celebrate-close:active { transform: translateY(1px); }
+
+  @keyframes celebrate-pop {
+    from { opacity: 0; transform: translateX(-50%) rotate(-4deg) scale(0.4); }
+    to   { opacity: 1; transform: translateX(-50%) rotate(-4deg) scale(1); }
+  }
+  @keyframes celebrate-rise {
+    from { opacity: 0; transform: translateY(14px); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+  }
+
+  /* ── 花瓣飘落 ─────────────── */
+  .celebrate-petals {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .petal {
+    position: absolute;
+    top: -24px;
+    width: 12px;
+    height: 12px;
+    opacity: 0;
+    transform-origin: center;
+    animation:
+      petal-fall var(--dur, 6s) linear var(--delay, 0s) infinite,
+      petal-swing var(--swing, 3s) ease-in-out var(--delay, 0s) infinite alternate;
+  }
+  .petal.gold { background: var(--gold-soft); border: 1px solid var(--gold-deep); }
+  .petal.red  { background: var(--red);       border: 1px solid var(--red-deep); }
+  .petal.cream{ background: var(--paper-light); border: 1px solid var(--gold-deep); }
+  /* 圆角 + 形似花瓣 */
+  .petal {
+    border-radius: 60% 20% 60% 20% / 50% 30% 50% 30%;
+    box-shadow: 0 1px 2px rgba(58, 24, 12, 0.25);
+  }
+  @keyframes petal-fall {
+    0%   { opacity: 0; transform: translateY(-30px) rotate(0deg); }
+    8%   { opacity: 0.95; }
+    100% { opacity: 0.2; transform: translateY(110vh) rotate(720deg); }
+  }
+  @keyframes petal-swing {
+    from { margin-left: -18px; }
+    to   { margin-left:  18px; }
+  }
+
+  /* ── 弹窗 + 横幅 响应式 ─────────────── */
+  @media (max-width: 720px) {
+    body.has-banner { padding-top: 44px; }
+    .celebrate-banner { padding: 9px 40px; gap: 10px; }
+    .celebrate-banner::before,
+    .celebrate-banner::after { display: none; }
+    .celebrate-banner .banner-text { font-size: 16px; letter-spacing: 0.2em; padding-left: 0.2em; }
+    .banner-close { width: 24px; height: 24px; font-size: 15px; right: 10px; }
+
+    .celebrate-card { padding: 36px 22px 26px; }
+    .celebrate-seal { width: 36px; height: 36px; font-size: 19px; top: -14px; }
+    .celebrate-greet { font-size: 26px; letter-spacing: 0.28em; padding-left: 0.28em; }
+    .celebrate-main  { font-size: 30px; letter-spacing: 0.12em; padding-left: 0.12em; margin: 14px 0 10px; }
+    .celebrate-en    { font-size: 13px; letter-spacing: 0.14em; margin: 4px 0 20px; }
+    .celebrate-close { font-size: 15px; padding: 8px 22px 10px; letter-spacing: 0.3em; padding-left: calc(22px + 0.3em); }
+  }
 </style>
 </head>
 <body>
+
+<!-- ═══ 祝贺横幅（弹窗关闭后从上方滑入） ═══ -->
+<div class="celebrate-banner" id="celebrate-banner" role="status" aria-live="polite">
+  <span class="banner-text">祝贺小谭同学通关！</span>
+  <button class="banner-close" id="banner-close" aria-label="关闭横幅" title="关闭">✕</button>
+</div>
+
+<!-- ═══ 祝贺弹窗（页面打开立即出现） ═══ -->
+<div class="celebrate-modal" id="celebrate-modal" role="dialog" aria-modal="true" aria-labelledby="celebrate-main">
+  <div class="celebrate-petals" id="celebrate-petals" aria-hidden="true"></div>
+  <div class="celebrate-card">
+    <div class="celebrate-seal">贺</div>
+    <div class="celebrate-greet">祝&nbsp;贺</div>
+    <div class="celebrate-main" id="celebrate-main">
+      小谭同学<span class="accent">通关</span>！
+    </div>
+    <div class="celebrate-en">Congratulations on the Pass</div>
+    <button class="celebrate-close" id="celebrate-close">閱&nbsp;畢</button>
+  </div>
+</div>
 
 <!-- SVG wobble 滤镜 -->
 <svg class="oil-filter">
@@ -2260,6 +2581,59 @@
     const targetCard = findTargetCard(strip, activeDetail.dayIdx);
     setPointerX(panel, targetCard);
   });
+
+  // ───── 祝贺动画 · 弹窗 + 顶部横幅 ─────
+  function spawnPetals() {
+    const host = document.getElementById('celebrate-petals');
+    if (!host) return;
+    const colors = ['gold', 'red', 'cream'];
+    const N = 28;
+    let html = '';
+    for (let i = 0; i < N; i++) {
+      const left = (Math.random() * 100).toFixed(2);
+      const dur  = (4.5 + Math.random() * 4).toFixed(2);
+      const delay= (Math.random() * 5).toFixed(2);
+      const swing= (2 + Math.random() * 2.5).toFixed(2);
+      const size = (8 + Math.random() * 8).toFixed(1);
+      const cls  = colors[i % colors.length];
+      html += `<span class="petal ${cls}" style="left:${left}%;width:${size}px;height:${size}px;--dur:${dur}s;--delay:${delay}s;--swing:${swing}s"></span>`;
+    }
+    host.innerHTML = html;
+  }
+
+  function showBanner() {
+    const banner = document.getElementById('celebrate-banner');
+    if (!banner) return;
+    document.body.classList.add('has-banner');
+    requestAnimationFrame(() => banner.classList.add('open'));
+    document.getElementById('banner-close').addEventListener('click', () => {
+      banner.classList.remove('open');
+      banner.classList.add('closing');
+      setTimeout(() => {
+        banner.remove();
+        document.body.classList.remove('has-banner');
+      }, 540);
+    }, { once: true });
+  }
+
+  function showCelebration() {
+    const modal = document.getElementById('celebrate-modal');
+    if (!modal) { showBanner(); return; }
+    spawnPetals();
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => modal.classList.add('open'));
+    document.getElementById('celebrate-close').addEventListener('click', () => {
+      modal.classList.remove('open');
+      modal.classList.add('closing');
+      setTimeout(() => {
+        modal.remove();
+        document.body.style.overflow = '';
+        showBanner();
+      }, 360);
+    }, { once: true });
+  }
+
+  showCelebration();
 
   // ───── 启动 ─────
   buildToday();
